@@ -367,6 +367,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row" style="border:0"><button class="btn" style="font-size:11px;padding:8px 16px" id="sAddPlan">＋ 新建方案</button></div>
       </div>
       <div class="panel"><h3>数据管理</h3>
+        <div class="set-row"><b>迁移旧版数据</b><span class="r" style="color:var(--gold);cursor:pointer" id="sMigrate">导入</span></div>
         <div class="set-row"><b>导出 Excel</b><span class="r" style="color:var(--gold);cursor:pointer" id="sExcel">导出</span></div>
         <div class="set-row"><b>备份数据</b><span class="r" style="color:var(--gold);cursor:pointer" id="sBackup">下载备份</span></div>
         <div class="set-row"><b>恢复数据</b><span class="r" style="color:var(--gold);cursor:pointer" id="sRestore">导入恢复</span></div>
@@ -1164,6 +1165,57 @@ function bindEvents(){
   };
   el('sSyncGo').onclick=function(){ syncNow(true); };
   el('sExcel').onclick=exportExcel;
+  // 迁移旧版数据（读取旧应用云端 admin.json → 转换合并）
+  el('sMigrate').onclick=async function(){
+    if(!syncToken()){ toast('请先配置同步令牌',true); return; }
+    try{
+      var r=await apiGithub('admin.json');
+      if(r.status!==200){ toast('云端未找到旧版数据',true); return; }
+      var j=await r.json();
+      var n=migrateOldData(b64dec(j.content));
+      if(n<0){ toast('旧数据格式无法解析',true); return; }
+      if(n===0){ toast('未发现可迁移的旧方案',true); return; }
+      saveState(curUser,state());
+      renderAll(); renderSettings();
+      toast('已迁移 '+n+' 个旧方案');
+    }catch(e){ toast('迁移失败：网络',true); }
+  };
+  function migrateOldData(raw){
+    var st=state(); if(!st) return -1;
+    var old;
+    try{ old=JSON.parse(raw); }catch(e){ return -1; }
+    var profs=(old.data&&old.data.profiles)||[];
+    var added=0;
+    profs.forEach(function(p){
+      if(!p||!p.name) return;
+      var name=p.name;
+      if(st.plans[name]) name=name+'·旧';
+      var plan=blankPlan(name);
+      plan.config.high=p.high||991.95;
+      plan.config.cap=p.cap||150;
+      ['1','2'].forEach(function(k){
+        var pos=p.pos&&p.pos[k], logic=k==='1'?'l1':'l2';
+        if(!pos) return;
+        var grams=0, cost=0;
+        (pos.checked||[]).forEach(function(c,i){
+          if(c&&pos.actGrams&&pos.actGrams[i]){
+            var g=Number(pos.actGrams[i])||0, pr=Number(pos.actPrice&&pos.actPrice[i])||0;
+            grams+=g; cost+=g*pr;
+          }
+        });
+        var gramsR=Math.round(grams*100)/100, costR=Math.round(cost*100)/100;
+        plan.position[logic]={grams:gramsR, avg:grams>0?Math.round(cost/grams*100)/100:0, cost:costR};
+      });
+      var sg=0;
+      ['1','2'].forEach(function(k){
+        var s=p.sold&&p.sold[k]; if(!s) return;
+        ['b1','b2','b3','b4','b5'].forEach(function(b){ sg+=Number(s[b])||0; });
+      });
+      if(sg>0){ plan.realized.soldGrams=Math.round(sg*100)/100; }
+      st.plans[name]=plan; added++;
+    });
+    return added;
+  }
   el('remindBarX').onclick=function(){ el('remindBar').classList.remove('show'); };
   el('sRestore').onclick=function(){ el('sRestoreFile').click(); };
   el('sRestoreFile').onchange=function(e){
