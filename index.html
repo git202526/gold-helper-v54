@@ -263,7 +263,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo">金</div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.6 · 逻辑管理重构</div>
+    <div class="vs" id="verLogin">V5.7 · 单仓位模型</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" value="admin" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -278,7 +278,7 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo">金</div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.6 · 逻辑管理重构</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.7 · 单仓位模型</span></div>
     <div class="tb-sp"></div>
     <div class="tb-user"><span id="tbName"></span><div class="av" id="tbAv">A</div></div>
     <button class="icon-btn" id="btnTheme" title="日夜切换">🌗</button>
@@ -331,11 +331,10 @@ td,th{font-size:10px;padding:6px 4px}
       <div class="onekey" id="bOneKey"></div>
     </div>
     <div class="panel">
-      <h3>自定义买入 / 卖出 <span class="r">手动指定方案·逻辑·克重·成交价</span></h3>
+      <h3>自定义买入 / 卖出 <span class="r">手动指定方案·克重·成交价</span></h3>
       <div class="trade-row">
         <div class="lbl buy">买入</div>
         <select class="sel" id="bBuyPlan"></select>
-        <select class="sel" id="bBuyLogic"><option>L1</option><option>L2</option></select>
         <input id="bBuyG" type="number" value="10" min="0" step="0.0001"><span class="at">g</span>
         <span class="at">@</span><input id="bBuyP" type="number" step="0.01"><span class="at">元/克</span>
         <div class="est" id="bBuyEst"></div>
@@ -344,7 +343,6 @@ td,th{font-size:10px;padding:6px 4px}
       <div class="trade-row">
         <div class="lbl sell">卖出</div>
         <select class="sel" id="bSellPlan"></select>
-        <select class="sel" id="bSellLogic"><option>L1</option><option>L2</option></select>
         <input id="bSellG" type="number" value="5" min="0" step="0.0001"><span class="at">g</span>
         <span class="at">@</span><input id="bSellP" type="number" step="0.01"><span class="at">元/克</span>
         <div class="est" id="bSellEst"></div>
@@ -411,7 +409,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.6 · 逻辑管理重构</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.7 · 单仓位模型</span></div>
       </div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -439,8 +437,8 @@ td,th{font-size:10px;padding:6px 4px}
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.6';
-var APP_VER_NOTE='逻辑管理重构';
+var APP_VER='V5.7';
+var APP_VER_NOTE='单仓位模型';
 var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120];      // 0~12 档
 var BASE1=[0,0,0,0,0,6,10,17,27,44,72,124,0];                 // 逻辑1：5档起
 var BASE2=[0,0,0,0,0,0,20,0,40,0,80,0,160];                   // 逻辑2：-60/-80/-100/-120
@@ -500,11 +498,14 @@ function currentTier(high,price){
 function judge(plan,price){
   var p=posAgg(plan), avg=p.avg||0;
   var st={action:'观望',grams:0,msg:'等待价格到达档位',cls:'tag-bd'};
-  if(p.grams<=0){ st.msg='暂无持仓，等待回撤触发建仓档'; return st; }
-  if(price>=avg+10){ st.action='分批止盈',st.grams=Math.round(p.grams*TP[0]*10000)/10000,st.msg='已回本，可启动第1批止盈',st.cls='tag-ok'; return st; }
-  var t=currentTier(plan.config.high,price);
   var lk=plan.config.logic||'L1';
+  var t=currentTier(plan.config.high,price);
   var row=calcProfile(plan.config.high,plan.config.cap)[t];
+  if(p.grams<=0){
+    if(row && row[lk] && row[lk].g>0){ st.action='建议买入',st.grams=row[lk].g,st.msg=t+'档触发 · '+logicName(lk)+'建议建仓',st.cls='tag-wa'; return st; }
+    st.msg='暂无持仓，等待回撤触发建仓档'; return st;
+  }
+  if(price>=avg+10){ st.action='分批止盈',st.grams=Math.round(p.grams*TP[0]*10000)/10000,st.msg='已回本，可启动第1批止盈',st.cls='tag-ok'; return st; }
   if(row && row[lk] && row[lk].g>0 && p.grams<plan.config.cap){ st.action='建议买入',st.grams=row[lk].g,st.msg=t+'档触发 · '+logicName(lk)+'建议加仓',st.cls='tag-wa'; return st; }
   if(p.grams>=plan.config.cap){ st.action='满仓',st.msg='已达建仓上限',st.cls='tag-bd'; return st; }
   if(price>=plan.config.high+20){ st.action='搏高止盈',st.grams=p.grams,st.msg='高于高点+20，搏高仓卖出',st.cls='tag-ok'; return st; }
@@ -514,14 +515,10 @@ function judge(plan,price){
 var USERS={admin:'admin123',uesr:'admin123'};
 var KEY_PREF='jcj_login_v1';
 function blankPos(){ return {grams:0,avg:0,cost:0}; }
-function blankPlan(name){ return {config:{name:name,high:991.95,cap:150,openDate:null,logic:'L1'},position:{l1:blankPos(),l2:blankPos()},realized:{soldGrams:0,soldCount:0,soldAvg:0,soldAmount:0,soldCost:0,profit:0,loss:0,net:0}}; }
+function blankPlan(name){ return {config:{name:name,high:991.95,cap:150,openDate:null,logic:'L1'},position:blankPos(),realized:{soldGrams:0,soldCount:0,soldAvg:0,soldAmount:0,soldCost:0,profit:0,loss:0,net:0}}; }
 /* 仓位取数：方案 × 逻辑 独立持仓；聚合视图用 posAgg */
-function posOf(p,logic){ return logic==='L2'?p.position.l2:p.position.l1; }
-function posAgg(p){
-  var g=0,c=0;
-  Object.keys(p.position||{}).forEach(function(k){ g+=p.position[k].grams; c+=p.position[k].cost; });
-  return {grams:g,cost:c,avg:g>0?c/g:0};
-}
+function posOf(p,logic){ return p.position; }
+function posAgg(p){ return p.position; }
 function blankState(){ return {plans:{},trades:[],settings:{profitStep:40,remindOn:true,theme:'dark',syncOn:true,gitToken:'',logics:defaultLogics()}}; }
 function loadState(user){
   var raw=localStorage.getItem('jcj_v54_'+user);
@@ -531,11 +528,15 @@ function loadState(user){
   if(!st.plans){ st.plans={}; }
   if(!Object.keys(st.plans).length){ st.plans['默认']=blankPlan('默认'); }
   ensureLogics(st);
-  // 迁移：旧版 position{grams,avg,cost} → l1
+  // 迁移：旧版双槽 position.l1/l2 → 合并为单一总仓位
   Object.keys(st.plans).forEach(function(n){
     var p=st.plans[n];
-    if(p.position && !p.position.l1){ p.position={l1:p.position||blankPos(), l2:blankPos()}; }
-    if(!p.position || !p.position.l1){ p.position={l1:blankPos(),l2:blankPos()}; }
+    if(p.position && p.position.l1){
+      var g=Math.round((p.position.l1.grams+p.position.l2.grams)*10000)/10000;
+      var c=Math.round((p.position.l1.cost+p.position.l2.cost)*100)/100;
+      p.position={grams:g,avg:g>0?Math.round(c/g*100)/100:0,cost:c};
+    }
+    if(!p.position || p.position.grams===undefined){ p.position=blankPos(); }
     if(!p.realized){ p.realized={soldGrams:0,soldCount:0,soldAvg:0,soldAmount:0,soldCost:0,profit:0,loss:0,net:0}; }
     if(p.realized.soldCost===undefined){ p.realized.soldCost=0; }
     if(!p.config){ p.config={name:n,high:991.95,cap:150,openDate:null}; }
@@ -618,22 +619,22 @@ async function syncNow(manual){
   }
 }
 /* ================= 买卖引擎 ================= */
-function buy(user,st,planName,logic,grams,price){
-  var key=planName+'·'+logic, p=st.plans[planName];
+function buy(user,st,planName,grams,price){
+  var p=st.plans[planName];
   if(!p){ return {ok:false,msg:'方案不存在'}; }
-  var pos=posOf(p,logic);
+  var pos=p.position;
   pos.grams=Math.round((pos.grams+grams)*10000)/10000;
   pos.cost=Math.round((pos.cost+grams*price)*100)/100;
   pos.avg=Math.round(pos.cost/pos.grams*100)/100;
   if(!p.config.openDate){ p.config.openDate=today(); }
-  st.trades.unshift({time:nowStr(),plan:planName,logic:logic,type:'买入',price:price,grams:grams,amount:Math.round(grams*price*100)/100,tier:'',realized:null});
+  st.trades.unshift({time:nowStr(),plan:planName,logic:'',type:'买入',price:price,grams:grams,amount:Math.round(grams*price*100)/100,tier:'',realized:null});
   saveState(user,st);
-  return {ok:true,msg:'已买入 '+grams+'g @'+price+' → '+planName+'·'+logic};
+  return {ok:true,msg:'已买入 '+grams+'g @'+price+' → '+planName};
 }
-function sell(user,st,planName,logic,grams,price){
+function sell(user,st,planName,grams,price){
   var p=st.plans[planName]; if(!p){ return {ok:false,msg:'方案不存在'}; }
-  var pos=posOf(p,logic);
-  if(grams>pos.grams+0.0001){ return {ok:false,msg:'卖出量超过 '+planName+'·'+logic+' 持仓 '+pos.grams+'g'}; }
+  var pos=p.position;
+  if(grams>pos.grams+0.0001){ return {ok:false,msg:'卖出量超过 '+planName+' 持仓 '+pos.grams+'g'}; }
   var realized=Math.round((price-pos.avg)*grams*100)/100;
   var r=p.realized;
   r.soldGrams=Math.round((r.soldGrams+grams)*10000)/10000; r.soldCount++;
@@ -645,40 +646,28 @@ function sell(user,st,planName,logic,grams,price){
   pos.grams=Math.round((pos.grams-grams)*10000)/10000;
   pos.cost=Math.round((pos.cost-grams*pos.avg)*100)/100; // 均价不变
   if(pos.grams<0.0001){ pos.grams=0; pos.cost=0; pos.avg=0; }
-  st.trades.unshift({time:nowStr(),plan:planName,logic:logic,type:'卖出',price:price,grams:grams,amount:Math.round(grams*price*100)/100,tier:'',realized:realized});
+  st.trades.unshift({time:nowStr(),plan:planName,logic:'',type:'卖出',price:price,grams:grams,amount:Math.round(grams*price*100)/100,tier:'',realized:realized});
   saveState(user,st);
   return {ok:true,msg:'已卖出 '+grams+'g @'+price+' · 已实现 '+realized};
 }
 /* 聚合卖出（止盈执行用）：克重从 L1 优先扣减，各逻辑按自身均价结算 */
 function sellAgg(user,st,planName,grams,price){
-  var p=st.plans[planName], pa=posAgg(p);
-  if(grams>pa.grams+0.0001){ return {ok:false,msg:'卖出量超过持仓 '+pa.grams+'g'}; }
-  var realizedSum=0, remain=grams;
-  var aggKeys=Object.keys(p.position||{}).map(function(k){ return k.toUpperCase(); });
-  // L1/L2 优先，其余按槽位顺序
-  aggKeys.sort(function(a,b){ var ra=a==='L1'?-2:(a==='L2'?-1:0), rb=b==='L1'?-2:(b==='L2'?-1:0); return ra-rb; });
-  aggKeys.forEach(function(lg){
-    var pos=posOf(p,lg);
-    if(remain<=0||pos.grams<=0.0001) return;
-    var take=Math.min(pos.grams,remain);
-    if(take<=0.0001) return;
-    var real=Math.round((price-pos.avg)*take*100)/100;
-    realizedSum+=real;
-    var r=p.realized;
-    r.soldGrams=Math.round((r.soldGrams+take)*10000)/10000; r.soldCount++;
-    r.soldAmount=Math.round((r.soldAmount+take*price)*100)/100;
-    r.soldCost=Math.round((r.soldCost+take*pos.avg)*100)/100;
-    r.soldAvg=Math.round(r.soldAmount/r.soldGrams*100)/100;
-    if(real>=0){ r.profit=Math.round((r.profit+real)*100)/100; } else { r.loss=Math.round((r.loss+Math.abs(real))*100)/100; }
-    r.net=Math.round((r.profit-r.loss)*100)/100;
-    pos.grams=Math.round((pos.grams-take)*10000)/10000;
-    pos.cost=Math.round((pos.cost-take*pos.avg)*100)/100;
-    if(pos.grams<0.0001){ pos.grams=0; pos.cost=0; pos.avg=0; }
-    st.trades.unshift({time:nowStr(),plan:planName,logic:lg,type:'卖出',price:price,grams:Math.round(take*10000)/10000,amount:Math.round(take*price*100)/100,tier:'',realized:real});
-    remain=Math.round((remain-take)*10000)/10000;
-  });
+  var p=st.plans[planName], pos=p.position;
+  if(grams>pos.grams+0.0001){ return {ok:false,msg:'卖出量超过持仓 '+pos.grams+'g'}; }
+  var realized=Math.round((price-pos.avg)*grams*100)/100;
+  var r=p.realized;
+  r.soldGrams=Math.round((r.soldGrams+grams)*10000)/10000; r.soldCount++;
+  r.soldAmount=Math.round((r.soldAmount+grams*price)*100)/100;
+  r.soldCost=Math.round((r.soldCost+grams*pos.avg)*100)/100;
+  r.soldAvg=Math.round(r.soldAmount/r.soldGrams*100)/100;
+  if(realized>=0){ r.profit=Math.round((r.profit+realized)*100)/100; } else { r.loss=Math.round((r.loss+Math.abs(realized))*100)/100; }
+  r.net=Math.round((r.profit-r.loss)*100)/100;
+  pos.grams=Math.round((pos.grams-grams)*10000)/10000;
+  pos.cost=Math.round((pos.cost-grams*pos.avg)*100)/100;
+  if(pos.grams<0.0001){ pos.grams=0; pos.cost=0; pos.avg=0; }
+  st.trades.unshift({time:nowStr(),plan:planName,logic:'',type:'卖出',price:price,grams:Math.round(grams*10000)/10000,amount:Math.round(grams*price*100)/100,tier:'',realized:realized});
   saveState(user,st);
-  return {ok:true,msg:'已卖出 '+grams+'g @'+price+' · 已实现 '+Math.round(realizedSum*100)/100};
+  return {ok:true,msg:'已卖出 '+grams+'g @'+price+' · 已实现 '+realized};
 }
 /* ================= 聚合 ================= */
 function aggregate(st,price){
@@ -922,8 +911,7 @@ function renderBuild(){
   // 方案下拉
   el('bBuyPlan').innerHTML=names.map(function(n){return '<option>'+n+'</option>'}).join('');
   el('bSellPlan').innerHTML=names.map(function(n){return '<option>'+n+'</option>'}).join('');
-  el('bBuyLogic').innerHTML='<option>L1</option><option>L2</option>';
-  el('bSellLogic').innerHTML='<option>L1</option><option>L2</option>';
+
   var p=st.plans[selPlan];
   el('bBuyP').value=''; el('bSellP').value='';
   if(price){ el('bBuyP').placeholder='输入成交价（实时 '+price.toFixed(2)+'）'; el('bSellP').placeholder='输入成交价（实时 '+price.toFixed(2)+'）'; }
@@ -958,13 +946,13 @@ function renderBuild(){
   var firstBuy=null; Object.keys(st.plans).forEach(function(n){ if(!firstBuy){ var j=judge(st.plans[n],price); if(j.action==='建议买入') firstBuy={name:n,grams:j.grams}; } });
   if(firstBuy){
     var pl=st.plans[firstBuy.name];
-    el('bOneKey').innerHTML='<div><div class="big">'+fmtG(firstBuy.grams)+'<em>g · '+firstBuy.name+' L1 · '+fmt(firstBuy.grams*(price||0),0)+' 元</em></div></div><div class="txt">按建议执行 · 自动写入仓位与流水 · 需输入本次真实成交价</div><button class="btn" id="bOneKeyGo">一键买入</button>';
+    el('bOneKey').innerHTML='<div><div class="big">'+fmtG(firstBuy.grams)+'<em>g · '+firstBuy.name+' · '+fmt(firstBuy.grams*(price||0),0)+' 元</em></div></div><div class="txt">按建议执行 · 自动写入仓位与流水 · 需输入本次真实成交价</div><button class="btn" id="bOneKeyGo">一键买入</button>';
     var g=el('bOneKeyGo'); if(g) g.onclick=function(){
       var ref=priceNow()||0;
       promptPrice('请输入本次买入真实成交价', ref, function(pr){
         if(pr==null){ toast('已取消买入'); return; }
         if(!(pr>0)){ toast('请输入真实成交价',true); return; }
-        var r=buy(curUser,state(),firstBuy.name,'L1',firstBuy.grams,pr); toast(r.msg,r.ok?false:true); if(r.ok) renderAll();
+        var r=buy(curUser,state(),firstBuy.name,firstBuy.grams,pr); toast(r.msg,r.ok?false:true); if(r.ok) renderAll();
       });
     };
   } else {
@@ -974,14 +962,14 @@ function renderBuild(){
   calcBuyEst(); calcSellEst();
 }
 function calcBuyEst(){
-  var st=state(), n=el('bBuyPlan').value, p=st.plans[n], pos=posOf(p,el('bBuyLogic').value), g=parseFloat(el('bBuyG').value)||0, pr=parseFloat(el('bBuyP').value)||0;
+  var st=state(), n=el('bBuyPlan').value, p=st.plans[n], pos=posOf(p,'L1'), g=parseFloat(el('bBuyG').value)||0, pr=parseFloat(el('bBuyP').value)||0;
   var ng=pos.grams+g, nc=pos.cost+g*pr, na=ng>0?nc/ng:0;
-  el('bBuyEst').innerHTML=g>0&&pr>0?('买入后 → '+n+'·'+el('bBuyLogic').value+' <b>'+fmtG(ng)+'g</b> · 均价 <b>'+na.toFixed(2)+'</b> · 总价 <b>'+fmt(nc,0)+'</b>'):'输入克重与成交价';
+  el('bBuyEst').innerHTML=g>0&&pr>0?('买入后 → '+n+' <b>'+fmtG(ng)+'g</b> · 均价 <b>'+na.toFixed(2)+'</b> · 总价 <b>'+fmt(nc,0)+'</b>'):'输入克重与成交价';
 }
 function calcSellEst(){
-  var st=state(), n=el('bSellPlan').value, p=st.plans[n], pos=posOf(p,el('bSellLogic').value), g=parseFloat(el('bSellG').value)||0, pr=parseFloat(el('bSellP').value)||0;
+  var st=state(), n=el('bSellPlan').value, p=st.plans[n], pos=posOf(p,'L1'), g=parseFloat(el('bSellG').value)||0, pr=parseFloat(el('bSellP').value)||0;
   var ng=pos.grams-g, real=g>0&&pr>0?(pr-pos.avg)*g:0;
-  el('bSellEst').innerHTML=g>0&&pr>0?('卖出后 → '+n+'·'+el('bSellLogic').value+' <b>'+fmtG(Math.max(0,ng))+'g</b> · 均价不变 · 回笼 <b>'+fmt(g*pr,0)+'</b> · 已实现 <b class="'+(real>=0?'up':'dn')+'">'+fmt(real,1)+'</b>'):'输入克重与成交价';
+  el('bSellEst').innerHTML=g>0&&pr>0?('卖出后 → '+n+' <b>'+fmtG(Math.max(0,ng))+'g</b> · 均价不变 · 回笼 <b>'+fmt(g*pr,0)+'</b> · 已实现 <b class="'+(real>=0?'up':'dn')+'">'+fmt(real,1)+'</b>'):'输入克重与成交价';
 }
 function renderPosition(){
   var st=state(); if(!st) return;
@@ -989,23 +977,19 @@ function renderPosition(){
   var names=Object.keys(st.plans), has=false;
   rows='<tr><th>仓位</th><th>实时价</th><th>持仓重量</th><th>买入均价</th><th>持仓成本</th><th>实时总价</th><th>浮动盈亏</th><th>已实现</th><th>卖出均价</th><th>操作</th></tr>';
   names.forEach(function(n){
-    var p=st.plans[n];
-    var posKeys=Object.keys(p.position||{}).map(function(k){ return k.toUpperCase(); });
-    posKeys.forEach(function(lg){
-      var pos=posOf(p,lg);
-      if(pos.grams<=0.0001) return;
-      has=true;
-      var val=pos.grams*price, fl=val-pos.cost;
-      rows+='<tr><td><b>'+n+' · '+lg+'</b></td><td class="'+(price?'':'')+'">'+(price?price.toFixed(2):'--')+'</td><td><b>'+fmtG(pos.grams)+'g</b></td><td>'+pos.avg.toFixed(2)+'</td><td>'+fmt(pos.cost,0)+'</td><td>'+fmt(val,0)+'</td><td class="'+(fl>=0?'up':'dn')+'">'+fmt(fl,0)+'</td><td class="'+(p.realized.net>=0?'up':'dn')+'">'+fmt(p.realized.net,1)+'</td><td>'+(p.realized.soldAvg?p.realized.soldAvg.toFixed(2):'--')+'</td><td><span class="tbtn buy" data-plan="'+n+'" data-logic="'+lg+'" data-type="buy">买入</span> <span class="tbtn sell" data-plan="'+n+'" data-logic="'+lg+'" data-type="sell">卖出</span></td></tr>';
-    });
+    var p=st.plans[n], pos=p.position;
+    if(!pos||pos.grams<=0.0001) return;
+    has=true;
+    var val=pos.grams*price, fl=val-pos.cost;
+    rows+='<tr><td><b>'+n+'</b></td><td>'+(price?price.toFixed(2):'--')+'</td><td><b>'+fmtG(pos.grams)+'g</b></td><td>'+pos.avg.toFixed(2)+'</td><td>'+fmt(pos.cost,0)+'</td><td>'+fmt(val,0)+'</td><td class="'+(fl>=0?'up':'dn')+'">'+fmt(fl,0)+'</td><td class="'+(p.realized.net>=0?'up':'dn')+'">'+fmt(p.realized.net,1)+'</td><td>'+(p.realized.soldAvg?p.realized.soldAvg.toFixed(2):'--')+'</td><td><span class="tbtn buy" data-plan="'+n+'" data-type="buy">买入</span> <span class="tbtn sell" data-plan="'+n+'" data-type="sell">卖出</span></td></tr>';
   });
   if(!has){ rows+='<tr><td colspan="10" style="text-align:center;color:var(--ink3);padding:22px">暂无持仓 · 去「建仓」执行买入</td></tr>'; }
   el('pTable').innerHTML=rows;
   // 流水
-  var tr='<tr><th>时间</th><th>方案·逻辑</th><th>类型</th><th>成交价</th><th>克重</th><th>金额</th><th>单笔已实现</th></tr>';
+  var tr='<tr><th>时间</th><th>方案</th><th>类型</th><th>成交价</th><th>克重</th><th>金额</th><th>单笔已实现</th></tr>';
   if(!st.trades.length){ tr+='<tr><td colspan="7" style="text-align:center;color:var(--ink3);padding:20px">暂无买卖记录</td></tr>'; }
   st.trades.slice(0,30).forEach(function(t){
-    tr+='<tr><td><b>'+t.time+'</b></td><td>'+t.plan+'·'+t.logic+'</td><td style="color:'+(t.type==='买入'?'var(--down)':'var(--up)')+'">'+t.type+'</td><td>'+t.price.toFixed(2)+'</td><td>'+fmtG(t.grams)+'g</td><td>'+fmt(t.amount,0)+'</td><td>'+(t.realized===null?'--':'<span class="'+(t.realized>=0?'up':'dn')+'">'+fmt(t.realized,1)+'</span>')+'</td></tr>';
+    tr+='<tr><td><b>'+t.time+'</b></td><td>'+t.plan+'</td><td style="color:'+(t.type==='买入'?'var(--down)':'var(--up)')+'">'+t.type+'</td><td>'+t.price.toFixed(2)+'</td><td>'+fmtG(t.grams)+'g</td><td>'+fmt(t.amount,0)+'</td><td>'+(t.realized===null?'--':'<span class="'+(t.realized>=0?'up':'dn')+'">'+fmt(t.realized,1)+'</span>')+'</td></tr>';
   });
   el('pTrades').innerHTML=tr;
 }
@@ -1017,17 +1001,11 @@ function renderPlan(){
   el('plSel').textContent='纯展示 · '+selPlan;
   var p=st.plans[selPlan], rows=calcProfile(p.config.high,p.config.cap);
   var price=priceNow(), cur=price?currentTier(p.config.high,price):-1;
-  var lgKeys=logicKeys();
-  var html='<tr><th>档位</th><th>参考价</th>';
-  lgKeys.forEach(function(k){ html+='<th>'+k+'加仓</th><th>'+k+'累计</th>'; });
-  html+='</tr>';
+  var lk=p.config.logic||'L1';
+  var html='<tr><th>档位</th><th>参考价</th><th>'+logicName(lk)+'('+lk+') 推荐加仓</th><th>'+lk+' 累计目标</th></tr>';
   rows.forEach(function(r){
-    var row='<tr'+(r.tier===cur?' class="cur"':'')+'><td>'+r.tier+'档 '+(r.draw===0?'高点':'-'+r.draw)+'</td><td>'+r.price.toFixed(2)+'</td>';
-    lgKeys.forEach(function(k){
-      var v=r[k]||{g:0,c:0};
-      row+='<td>'+(v.g?fmtG(v.g)+'g':'--')+'</td><td>'+(v.c?fmtG(v.c)+'g':'--')+'</td>';
-    });
-    row+='</tr>';
+    var v=r[lk]||{g:0,c:0};
+    var row='<tr'+(r.tier===cur?' class="cur"':'')+'><td>'+r.tier+'档 '+(r.draw===0?'高点':'-'+r.draw)+'</td><td>'+r.price.toFixed(2)+'</td><td>'+(v.g?fmtG(v.g)+'g':'--')+'</td><td>'+(v.c?fmtG(v.c)+'g':'--')+'</td></tr>';
     html+=row;
   });
   el('plTable').innerHTML=html;
@@ -1243,14 +1221,14 @@ function bindEvents(){
     var g=parseFloat(el('bBuyG').value)||0, pr=parseFloat(el('bBuyP').value);
     if(!(g>0)){ toast('请输入买入克重',true); return; }
     if(!pr||pr<=0){ toast('请输入真实买入成交价',true); return; }
-    var r=buy(curUser,state(),el('bBuyPlan').value,el('bBuyLogic').value,g,pr);
+    var r=buy(curUser,state(),el('bBuyPlan').value,g,pr);
     toast(r.msg,r.ok?false:true); if(r.ok) renderAll();
   };
   el('bSellGo').onclick=function(){
     var g=parseFloat(el('bSellG').value)||0, pr=parseFloat(el('bSellP').value);
     if(!(g>0)){ toast('请输入卖出克重',true); return; }
     if(!pr||pr<=0){ toast('请输入真实卖出成交价',true); return; }
-    var r=sell(curUser,state(),el('bSellPlan').value,el('bSellLogic').value,g,pr);
+    var r=sell(curUser,state(),el('bSellPlan').value,g,pr);
     toast(r.msg,r.ok?false:true); if(r.ok) renderAll();
   };
   el('sAddPlan').onclick=function(){
@@ -1439,8 +1417,8 @@ function bindEvents(){
     curTab='build';
     ['overview','build','position','plan','analytics','settings'].forEach(function(k){ el('view-'+k).classList.toggle('hide',k!=='build'); });
     renderBuild();
-    if(type==='buy'){ el('bBuyPlan').value=plan; el('bBuyLogic').value=logic; calcBuyEst(); el('bBuyG').focus(); }
-    else { el('bSellPlan').value=plan; el('bSellLogic').value=logic; calcSellEst(); el('bSellG').focus(); }
+    if(type==='buy'){ el('bBuyPlan').value=plan; calcBuyEst(); el('bBuyG').focus(); }
+    else { el('bSellPlan').value=plan; calcSellEst(); el('bSellG').focus(); }
   });
 }
 function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); el('sTheme').classList.toggle('on',t==='dark'); }
