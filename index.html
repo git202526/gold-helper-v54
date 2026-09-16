@@ -167,6 +167,19 @@ html[data-theme="light"] .sw{background:#C4CDDE}
 .toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);background:var(--card2);border:1px solid var(--gold);color:var(--ink);font-size:12px;padding:11px 20px;border-radius:12px;z-index:120;box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;max-width:86vw;text-align:center}
 .toast.show{opacity:1}
 .toast.err{border-color:var(--up);color:var(--up)}
+.modal-mask{position:fixed;inset:0;background:rgba(5,8,14,.66);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px}
+.modal{width:min(340px,88vw);background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid rgba(232,179,75,.35);border-radius:18px;padding:22px 20px 18px;box-shadow:0 24px 70px -20px rgba(0,0,0,.8);animation:pop .22s ease}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-t{font-size:15px;font-weight:900;color:var(--ink);text-align:center}
+.modal-ref{font-size:11px;color:var(--gold);text-align:center;margin-top:6px;font-variant-numeric:tabular-nums}
+.modal-in{width:100%;box-sizing:border-box;margin-top:16px;background:var(--bg2);border:1px solid var(--line);border-radius:11px;color:var(--ink);font-size:22px;font-weight:800;text-align:center;padding:12px 8px;font-variant-numeric:tabular-nums;outline:none}
+.modal-in:focus{border-color:var(--gold)}
+.modal-btns{display:flex;gap:10px;margin-top:16px}
+.modal-btn{flex:1;border:none;border-radius:11px;font-size:14px;font-weight:800;padding:11px 0;cursor:pointer}
+.modal-btn.cancel{background:var(--bg2);color:var(--ink2);border:1px solid var(--line)}
+.modal-btn.ok{background:linear-gradient(135deg,#F0C96A,#A67B1E);color:#171007}
+html[data-theme="light"] .modal-mask{background:rgba(30,40,70,.4)}
+html[data-theme="light"] .modal-btn.ok{color:#fff}
 .ring-wrap .empty{flex:1;font-size:11px;color:var(--ink3);text-align:center;padding:20px 0}
 .plan-row{display:flex;align-items:center;gap:7px;padding:9px 2px;border-bottom:1px solid rgba(36,48,73,.5);flex-wrap:wrap}
 .plan-row .nm{font-size:12px;font-weight:800;color:var(--ink);min-width:56px}
@@ -386,6 +399,15 @@ td,th{font-size:10px;padding:6px 4px}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="modal-mask hide" id="priceMask">
+  <div class="modal">
+    <div class="modal-t" id="priceTitle">请输入本次买入真实成交价</div>
+    <div class="modal-ref" id="priceRef">实时参考 -- 元/克</div>
+    <input class="modal-in" id="priceInput" type="number" step="0.01" min="0" placeholder="输入真实成交价">
+    <div class="modal-btns"><button class="modal-btn cancel" id="priceCancel">取消</button><button class="modal-btn ok" id="priceOk">确认</button></div>
+  </div>
+</div>
 
 <script>
 'use strict';
@@ -646,6 +668,24 @@ function fmt(n,d){ if(n===null||n===undefined||isNaN(n)) return '--'; return (n<
 function fmtG(n){ if(n===null||n===undefined||isNaN(n)) return '--'; return (n<0?'-':'')+Math.abs(n).toLocaleString('zh-CN',{maximumFractionDigits:4}); }
 function priceNow(){ return FX.cny||0; }
 function toast(msg,err){ var t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); clearTimeout(toast._t); toast._t=setTimeout(function(){t.className='toast';},2200); }
+// 主题化价格输入弹框（替代原生 prompt）
+var priceCb=null;
+function promptPrice(title,ref,cb){
+  priceCb=cb;
+  el('priceTitle').textContent=title;
+  el('priceRef').textContent='实时参考 '+(ref&&ref>0?ref.toFixed(2):'--')+' 元/克';
+  var inp=el('priceInput'); inp.value=''; inp.placeholder=(ref&&ref>0?ref.toFixed(2):'输入真实成交价');
+  el('priceMask').classList.remove('hide');
+  setTimeout(function(){ inp.focus(); },60);
+}
+function closePrice(){ el('priceMask').classList.add('hide'); priceCb=null; }
+el('priceCancel').onclick=function(){ closePrice(); if(priceCb) priceCb(null); };
+el('priceOk').onclick=function(){
+  var pr=parseFloat(el('priceInput').value);
+  if(!(pr>0)){ toast('请输入真实成交价',true); return; }
+  var cb=priceCb; closePrice(); if(cb) cb(pr);
+};
+el('priceMask').addEventListener('click',function(e){ if(e.target===this){ closePrice(); if(priceCb) priceCb(null); } });
 function el(id){ return document.getElementById(id); }
 var curUser=null,curState=null,curTab='overview';
 function state(){ return curState; }
@@ -844,9 +884,11 @@ function renderBuild(){
     el('bOneKey').innerHTML='<div><div class="big">'+fmtG(firstBuy.grams)+'<em>g · '+firstBuy.name+' L1 · '+fmt(firstBuy.grams*(price||0),0)+' 元</em></div></div><div class="txt">按建议执行 · 自动写入仓位与流水 · 需输入本次真实成交价</div><button class="btn" id="bOneKeyGo">一键买入</button>';
     var g=el('bOneKeyGo'); if(g) g.onclick=function(){
       var ref=priceNow()||0;
-      var pr=parseFloat(prompt('请输入本次买入真实成交价（实时参考 '+ref.toFixed(2)+'）', ref?ref.toFixed(2):''));
-      if(!pr||pr<=0){ toast('已取消：未输入真实成交价',true); return; }
-      var r=buy(curUser,state(),firstBuy.name,'L1',firstBuy.grams,pr); toast(r.msg,r.ok?false:true); if(r.ok) renderAll();
+      promptPrice('请输入本次买入真实成交价', ref, function(pr){
+        if(pr==null){ toast('已取消买入'); return; }
+        if(!(pr>0)){ toast('请输入真实成交价',true); return; }
+        var r=buy(curUser,state(),firstBuy.name,'L1',firstBuy.grams,pr); toast(r.msg,r.ok?false:true); if(r.ok) renderAll();
+      });
     };
   } else {
     el('bOneKey').innerHTML='<div class="txt">当前无「建议买入」方案（观望/止盈/满仓）</div>';
