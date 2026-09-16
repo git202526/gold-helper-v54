@@ -270,7 +270,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo">金</div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.14 · 计划方案切换+列头精简</div>
+    <div class="vs" id="verLogin">V5.15 · 止盈按基准批次卖完</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" value="admin" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -285,7 +285,7 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo">金</div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.14 · 计划方案切换+列头精简</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.15 · 止盈按基准批次卖完</span></div>
     <div class="tb-sp"></div>
     <div class="tb-user"><span id="tbName"></span><div class="av" id="tbAv">A</div></div>
     <button class="icon-btn" id="btnTheme" title="日夜切换">🌗</button>
@@ -422,7 +422,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.14 · 计划方案切换+列头精简</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.15 · 止盈按基准批次卖完</span></div>
       </div></div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -450,8 +450,8 @@ td,th{font-size:10px;padding:6px 4px}
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.14';
-var APP_VER_NOTE='计划方案切换+列头精简';
+var APP_VER='V5.15';
+var APP_VER_NOTE='止盈按基准批次卖完';
 var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150];      // 0~15 档（16档）
 var BASE1=[0,0,0,0,0,5,7,9,12,16,22,30,42,61,96,0];           // 逻辑1：5档起，14档满仓
 var BASE2=[0,0,0,0,0,0,12,0,24,0,48,0,96,0,120,0];            // 逻辑2：-60/-80/-100/-120/-140
@@ -1070,12 +1070,16 @@ function renderPlan(){
 }
 function renderTakeProfit(p,planName){
   var box=el('plTakeProfit'), html='', grams=posAgg(p).grams, avg=posAgg(p).avg, price=priceNow();
+  // 止盈基准总仓：首次进入止盈时锁定（建仓完成总仓），各批按基准×比例卖，保证能按批次卖完
+  if(!(p.tpBase>0) && grams>0.0001){ p.tpBase=Math.round(grams*10000)/10000; }
+  var base=p.tpBase||grams;
+  if(!p.tpDone){ p.tpDone={}; }
   // 止盈目标长条卡：5档分批目标盈利总额 + 回到1档清仓目标盈利
   var bar=el('plTpBar');
   var targets=[p.config.high-30,p.config.high-20,p.config.high-10,p.config.high,p.config.high+20];
   var sumPnl=0;
   TP.forEach(function(r,i){
-    var g=grams*r;
+    var g=Math.round(base*r*10000)/10000;
     sumPnl+=g*(targets[i]-avg);
   });
   var clearG=grams, clearPnl=grams*(p.config.high-10-avg); // 回到1档(高点-10)清仓
@@ -1083,12 +1087,18 @@ function renderTakeProfit(p,planName){
     '<div class="tb"><div class="k">分批止盈目标盈利总额</div><div class="v '+(sumPnl>=0?'':'')+'">'+(grams>0?(sumPnl>=0?'+':'')+fmt(sumPnl,0):'--')+'<span style="font-size:9px;color:var(--ink3)"> 元</span></div><div class="s">5 批合计 · 按止盈目标价推算</div></div>'+
     '<div class="tb"><div class="k">回到1档清仓目标盈利</div><div class="v '+(clearPnl>=0?'':'')+'">'+(grams>0?(clearPnl>=0?'+':'')+fmt(clearPnl,0):'--')+'<span style="font-size:9px;color:var(--ink3)"> 元</span></div><div class="s">全部持仓 '+(grams>0?fmtG(grams):'--')+'g @ 1档('+fmt(p.config.high-10,2)+')清仓</div></div>';
   TP.forEach(function(r,i){
-    var g=Math.round(grams*r*10000)/10000;
-    html+='<div class="tp"><div class="k">'+TP_LABEL[i]+'</div><div class="v">'+(i===4?'':fmtG(g)+'g')+'</div><div class="s">'+TP_DESC[i]+'</div>';
-    if(grams>0){
+    var g=Math.round(base*r*10000)/10000;
+    var done=p.tpDone[i]?true:false;
+    var have=Math.round(posAgg(p).grams*10000)/10000;
+    var remain=Math.round((base*g>0?g:0)*10000)/10000; // 该批目标
+    if(remain>have+0.0001) remain=have; // 实际持仓不足则按剩余卖
+    var stateTxt=done?'<div class="res done">✔ 已完成</div>':'';
+    html+='<div class="tp'+(done?' tpdone':'')+'"><div class="k">'+TP_LABEL[i]+'</div><div class="v">'+(i===4?'':fmtG(g)+'g')+'</div><div class="s">'+TP_DESC[i]+'</div>';
+    if(grams>0.0001&&!done){
       html+='<div class="ex"><input id="tpP'+i+'" type="number" step="0.01" placeholder="卖出价"></div>';
       html+='<div class="ex"><button class="go'+(i===4?' out':'')+'" id="tpGo'+i+'">执行</button></div><div class="res" id="tpRes'+i+'"></div>';
-    } else { html+='<div class="s" style="margin-top:6px;color:var(--ink3)">无持仓</div>'; }
+    } else if(grams>0.0001&&done){ html+=stateTxt; }
+    else { html+='<div class="s" style="margin-top:6px;color:var(--ink3)">无持仓</div>'; }
     html+='</div>';
   });
   box.innerHTML=html;
@@ -1097,10 +1107,15 @@ function renderTakeProfit(p,planName){
     go.onclick=function(){
       var pin=el('tpP'+i), pr=parseFloat(pin.value);
       if(!pr||pr<=0){ toast('请输入真实卖出价',true); return; }
-      var g=Math.round(posAgg(p).grams*r*10000)/10000;
+      var base=p.tpBase||posAgg(p).grams;
+      var g=Math.round(base*r*10000)/10000;
+      var have=posAgg(p).grams;
+      if(g>have+0.0001){ g=Math.round(have*10000)/10000; }
       if(g<=0){ toast('当前无持仓可卖',true); return; }
       var r2=sellAgg(curUser,state(),planName,g,pr);
       var real=(pr-posAgg(p).avg)*g;
+      p.tpDone[i]=true;
+      saveState(curUser,state());
       el('tpRes'+i).textContent='已实现 '+fmt(real,1);
       el('tpRes'+i).className='res'+(real<0?' bad':'');
       toast(r2.msg); renderAll();
