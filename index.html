@@ -267,7 +267,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo">金</div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.9 · 按上限分配</div>
+    <div class="vs" id="verLogin">V5.10 · 上限截断分配</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" value="admin" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -282,7 +282,7 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo">金</div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.9 · 按上限分配</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.10 · 上限截断分配</span></div>
     <div class="tb-sp"></div>
     <div class="tb-user"><span id="tbName"></span><div class="av" id="tbAv">A</div></div>
     <button class="icon-btn" id="btnTheme" title="日夜切换">🌗</button>
@@ -418,7 +418,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.9 · 按上限分配</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.10 · 上限截断分配</span></div>
       </div></div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -446,8 +446,8 @@ td,th{font-size:10px;padding:6px 4px}
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.9';
-var APP_VER_NOTE='按上限分配';
+var APP_VER='V5.10';
+var APP_VER_NOTE='上限截断分配';
 var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150];      // 0~15 档（16档）
 var BASE1=[0,0,0,0,0,5,7,9,12,16,22,30,42,61,96,0];           // 逻辑1：5档起，14档满仓
 var BASE2=[0,0,0,0,0,0,12,0,24,0,48,0,96,0,120,0];            // 逻辑2：-60/-80/-100/-120/-140
@@ -459,19 +459,22 @@ function logicName(key){ var L=getLogics(); return (L[key]&&L[key].name)||key; }
 function logicBase(key){ var L=getLogics(); return (L[key]&&L[key].base)||(key==='L2'?BASE2:BASE1); }
 function ensureLogics(st){ if(!st.settings) st.settings={}; if(!st.settings.logics) st.settings.logics=defaultLogics(); return st.settings.logics; }
 /* 简易建仓规则生成：起点距高点 start 元，每隔 gap 元加仓一次，克重 base×rate^n，回升 reduce 元触发减仓提示 */
-function genLogicMeta(gap,start,base,rate,reduce){
-  var b=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], i, n=0, sum=0;
+function genLogicMeta(gap,start,base,rate,reduce,capLimit){
+  capLimit=(capLimit>0)?capLimit:300;
+  var b=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], n=0, cum=0;
   for(var pos=start; pos<=150.001; pos+=gap){
     var idx=Math.floor(pos/10+0.0001);
-    if(idx>=1&&idx<=15){ b[idx]=base*Math.pow(rate,n); n++; }
+    if(idx>=1&&idx<=15){
+      var g=base*Math.pow(rate,n); n++;
+      if(cum+g<=capLimit+0.0001){ b[idx]=Math.round(g*10000)/10000; cum+=g; }
+      else if(cum<capLimit-0.0001){ b[idx]=Math.round((capLimit-cum)*10000)/10000; cum=capLimit; }
+      else { break; }
+    }
   }
-  // 按持仓上限分配：各档推荐重量等比缩放，总和=300g 基准（方案按 cap/300 再缩放）
-  b.forEach(function(x){ sum+=x; });
-  if(sum>0){ b=b.map(function(x){ return x<=0?0:Math.round(x*300/sum*10000)/10000; }); }
-  return {base:b,meta:{gap:gap,start:start,base:base,rate:rate,reduce:reduce}};
+  return {base:b,meta:{gap:gap,start:start,base:base,rate:rate,reduce:reduce,capLimit:Math.round(capLimit*100)/100}};
 }
 function logicMetaSummary(m){
-  return '间隔'+m.gap+'元 · 起点'+m.start+'元 · 基数'+m.base+'g · 递增'+m.rate+'倍 · 回升'+m.reduce+'元减仓';
+  return '间隔'+m.gap+'元 · 起点'+m.start+'元 · 基数'+m.base+'g · 递增'+m.rate+'倍 · 回升'+m.reduce+'元减仓'+(m.capLimit?' · 上限'+m.capLimit+'g':'');
 }
 var TP=[0.10,0.20,0.20,0.20,0.30];                            // 止盈 10/20/20/20 + 30搏高
 var TP_LABEL=['第1批 10%','第2批 20%','第3批 20%','第4批 20%','30% 搏高'];
@@ -479,15 +482,20 @@ var TP_DESC=['高点-30','高点-20','高点-10','回到高点','高点+20 卖 /
 var BREAK_EVEN=10;   // 回本 = 均价 + 10
 var PROFIT_STEP=40;  // 每克盈利步长
 
-function scaleOf(cap){ return cap/300; }
+function scaleOf(cap,lk){
+  var b=lk?logicBase(lk):null, sum=0;
+  if(b){ for(var i=0;i<b.length;i++) sum+=b[i]; }
+  if(!(sum>0)) sum=300;
+  return cap/sum;
+}
 /* 计划表：每档 参考价 / L1加仓 / L1累计 / L2加仓 / L2累计 */
 function calcProfile(high,cap){
-  var s=scaleOf(cap), rows=[], i, keys=logicKeys(), cum={};
+  var rows=[], i, keys=logicKeys(), cum={};
   keys.forEach(function(k){ cum[k]=0; });
   for(i=0;i<DRAWDOWN.length;i++){
     var row={tier:i,draw:DRAWDOWN[i],price:high-DRAWDOWN[i]};
     keys.forEach(function(k){
-      var g=Math.round((logicBase(k)[i]||0)*s*10000)/10000;
+      var g=Math.round((logicBase(k)[i]||0)*scaleOf(cap,k)*10000)/10000;
       cum[k]+=g;
       row[k]={g:g,c:Math.round(cum[k]*10000)/10000};
     });
@@ -557,6 +565,9 @@ function loadState(user){
       var nb=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
       for(var i=0;i<b.length&&i<16;i++) nb[i]=b[i];
       st.settings.logics[k].base=nb;
+    }
+    if(st.settings.logics[k]&&st.settings.logics[k].meta&&!st.settings.logics[k].meta.capLimit){
+      st.settings.logics[k].meta.capLimit=300;
     }
   });
   if(!st.trades){ st.trades=[]; }
@@ -1157,7 +1168,7 @@ function renderSettings(){
     var m=L[k].meta||null;
     lh+='<div class="logic-row"><div class="logic-hd"><b>'+L[k].name+'</b><span class="lg-key">'+k+'</span><span style="flex:1"></span>'+(m?'<span class="lg-sum">'+logicMetaSummary(m)+'</span><button class="pbtn ok" data-lg-gen="'+k+'">按参数生成</button>':'')+(k!=='L1'&&k!=='L2'?'<button class="pbtn del" data-lg-del="'+k+'">删除</button>':'<span style="font-size:8px;color:var(--ink3)">内置</span>')+'</div>';
     if(m){
-      lh+='<div class="logic-meta"><label>间隔<input data-lg-m="'+k+'" data-f="gap" type="number" step="1" value="'+m.gap+'"></label><label>起点<input data-lg-m="'+k+'" data-f="start" type="number" step="1" value="'+m.start+'"></label><label>基数<input data-lg-m="'+k+'" data-f="base" type="number" step="0.0001" value="'+m.base+'"></label><label>递增<input data-lg-m="'+k+'" data-f="rate" type="number" step="0.1" value="'+m.rate+'"></label><label>回升减仓<input data-lg-m="'+k+'" data-f="reduce" type="number" step="1" value="'+m.reduce+'"></label></div>';
+      lh+='<div class="logic-meta"><label>间隔<input data-lg-m="'+k+'" data-f="gap" type="number" step="1" value="'+m.gap+'"></label><label>起点<input data-lg-m="'+k+'" data-f="start" type="number" step="1" value="'+m.start+'"></label><label>基数<input data-lg-m="'+k+'" data-f="base" type="number" step="0.0001" value="'+m.base+'"></label><label>递增<input data-lg-m="'+k+'" data-f="rate" type="number" step="0.1" value="'+m.rate+'"></label><label>回升减仓<input data-lg-m="'+k+'" data-f="reduce" type="number" step="1" value="'+m.reduce+'"></label><label>持仓上限<input data-lg-m="'+k+'" data-f="capLimit" type="number" step="1" value="'+(m.capLimit||300)+'"></label></div>';
     }
     lh+='<div class="logic-grid">';
     DRAWDOWN.forEach(function(d,i){
@@ -1324,7 +1335,7 @@ function bindEvents(){
       m[inp.getAttribute('data-f')]=parseFloat(inp.value)||0;
     });
     if(!(m.gap>0&&m.start>0&&m.base>0&&m.rate>0)){ toast('参数无效：间隔/起点/基数/递增需大于0',true); return; }
-    var g=genLogicMeta(m.gap,m.start,m.base,m.rate,m.reduce||0);
+    var g=genLogicMeta(m.gap,m.start,m.base,m.rate,m.reduce||0,m.capLimit||300);
     L[k].base=g.base; L[k].meta=g.meta;
   }
   el('sSaveLogics').onclick=function(){
@@ -1339,7 +1350,7 @@ function bindEvents(){
     var nm=prompt('新逻辑名称（如：逻辑3）'); if(!nm) return;
     var st=state(), L=getLogics(), key='L3', i;
     for(i=1;i<=20;i++){ if(!L['L'+i]){ key='L'+i; break; } }
-    var g=genLogicMeta(10,30,5,1.5,20);
+    var g=genLogicMeta(10,30,5,1.5,20,300);
     L[key]={name:nm,meta:g.meta,base:g.base};
     st.settings.logics=L; saveState(curUser,st); renderSettings(); toast('已新建 '+nm+'（'+key+'）：间隔10元·起点-30·基数5g·递增1.5倍，可改参数后点「按参数生成」');
   };
