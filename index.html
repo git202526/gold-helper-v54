@@ -809,9 +809,9 @@ function renderBuild(){
   el('bBuyPlan').innerHTML=names.map(function(n){return '<option>'+n+'</option>'}).join('');
   el('bSellPlan').innerHTML=names.map(function(n){return '<option>'+n+'</option>'}).join('');
   var p=st.plans[selPlan];
-  el('bBuyP').value=price?price.toFixed(2):'';
-  el('bSellP').value=price?price.toFixed(2):'';
-  if(!price){ el('bBuyP').placeholder='金价待获取'; }
+  el('bBuyP').value=''; el('bSellP').value='';
+  if(price){ el('bBuyP').placeholder='输入成交价（实时 '+price.toFixed(2)+'）'; el('bSellP').placeholder='输入成交价（实时 '+price.toFixed(2)+'）'; }
+  else { el('bBuyP').placeholder='输入真实成交价'; el('bSellP').placeholder='输入真实成交价'; }
   // 档位标尺与 chips
   var rows=calcProfile(p.config.high,p.config.cap), cur=price?currentTier(p.config.high,price):-1;
   var mk=''; rows.forEach(function(r,i){ if(i>0&&i<12) mk+='<div class="mk" style="left:'+(i*100/12)+'%"></div>'; });
@@ -841,8 +841,13 @@ function renderBuild(){
   var firstBuy=null; Object.keys(st.plans).forEach(function(n){ if(!firstBuy){ var j=judge(st.plans[n],price); if(j.action==='建议买入') firstBuy={name:n,grams:j.grams}; } });
   if(firstBuy){
     var pl=st.plans[firstBuy.name];
-    el('bOneKey').innerHTML='<div><div class="big">'+fmtG(firstBuy.grams)+'<em>g · '+firstBuy.name+' L1 · '+fmt(firstBuy.grams*(price||0),0)+' 元</em></div></div><div class="txt">按建议执行 · 自动写入仓位与流水 · 成交价取当前实时金价（可改）</div><button class="btn" id="bOneKeyGo">一键买入</button>';
-    var g=el('bOneKeyGo'); if(g) g.onclick=function(){ var r=buy(curUser,state(),firstBuy.name,'L1',firstBuy.grams,priceNow()); toast(r.msg); renderAll(); };
+    el('bOneKey').innerHTML='<div><div class="big">'+fmtG(firstBuy.grams)+'<em>g · '+firstBuy.name+' L1 · '+fmt(firstBuy.grams*(price||0),0)+' 元</em></div></div><div class="txt">按建议执行 · 自动写入仓位与流水 · 需输入本次真实成交价</div><button class="btn" id="bOneKeyGo">一键买入</button>';
+    var g=el('bOneKeyGo'); if(g) g.onclick=function(){
+      var ref=priceNow()||0;
+      var pr=parseFloat(prompt('请输入本次买入真实成交价（实时参考 '+ref.toFixed(2)+'）', ref?ref.toFixed(2):''));
+      if(!pr||pr<=0){ toast('已取消：未输入真实成交价',true); return; }
+      var r=buy(curUser,state(),firstBuy.name,'L1',firstBuy.grams,pr); toast(r.msg,r.ok?false:true); if(r.ok) renderAll();
+    };
   } else {
     el('bOneKey').innerHTML='<div class="txt">当前无「建议买入」方案（观望/止盈/满仓）</div>';
   }
@@ -1089,11 +1094,17 @@ function bindEvents(){
   el('bSellG').oninput=calcSellEst; el('bSellP').oninput=calcSellEst;
   el('bPlanSel').onchange=function(){ renderBuild(); };
   el('bBuyGo').onclick=function(){
-    var r=buy(curUser,state(),el('bBuyPlan').value,el('bBuyLogic').value,parseFloat(el('bBuyG').value)||0,parseFloat(el('bBuyP').value)||0);
+    var g=parseFloat(el('bBuyG').value)||0, pr=parseFloat(el('bBuyP').value);
+    if(!(g>0)){ toast('请输入买入克重',true); return; }
+    if(!pr||pr<=0){ toast('请输入真实买入成交价',true); return; }
+    var r=buy(curUser,state(),el('bBuyPlan').value,el('bBuyLogic').value,g,pr);
     toast(r.msg,r.ok?false:true); if(r.ok) renderAll();
   };
   el('bSellGo').onclick=function(){
-    var r=sell(curUser,state(),el('bSellPlan').value,el('bSellLogic').value,parseFloat(el('bSellG').value)||0,parseFloat(el('bSellP').value)||0);
+    var g=parseFloat(el('bSellG').value)||0, pr=parseFloat(el('bSellP').value);
+    if(!(g>0)){ toast('请输入卖出克重',true); return; }
+    if(!pr||pr<=0){ toast('请输入真实卖出成交价',true); return; }
+    var r=sell(curUser,state(),el('bSellPlan').value,el('bSellLogic').value,g,pr);
     toast(r.msg,r.ok?false:true); if(r.ok) renderAll();
   };
   el('sAddPlan').onclick=function(){
