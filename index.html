@@ -139,6 +139,10 @@ tr.cur td b{color:var(--gold)}
 .set-row{display:flex;align-items:center;gap:9px;padding:9px 2px;border-bottom:1px solid rgba(36,48,73,.5);font-size:11.5px;color:var(--ink2)}
 .set-row:last-child{border-bottom:0}
 .set-row b{color:var(--ink);font-weight:600}
+.fold-hd{cursor:pointer;-webkit-user-select:none;user-select:none}
+.fold-hd .fold-ic{float:right;transition:transform .22s;opacity:.75;font-size:13px;margin-left:8px;line-height:1.2}
+.panel.folded .fold-bd{display:none}
+.panel.folded .fold-ic{transform:rotate(-90deg)}
 .set-row .r{margin-left:auto;font-size:10px;color:var(--ink3)}
 .sw{width:32px;height:18px;border-radius:99px;background:#2A3752;position:relative;flex:none;margin-left:auto}
 html[data-theme="light"] .sw{background:#C4CDDE}
@@ -382,35 +386,40 @@ td,th{font-size:10px;padding:6px 4px}
   <!-- 设置 -->
   <div id="view-settings" class="hide">
     <div class="set-grid">
-      <div class="panel"><h3>账号与同步 <span class="r" id="sUser">--</span></h3>
+      <div class="panel" data-fold-key="acct"><h3 class="fold-hd">账号与同步 <span class="r" id="sUser">--</span><span class="fold-ic">▾</span></h3>
+      <div class="fold-bd">
         <div class="set-row"><b>登录账号</b><span class="r" id="sUser2">--</span></div>
         <div class="set-row"><b>云端同步</b><span class="r" style="display:flex;align-items:center;gap:6px"><span id="sSyncState" style="font-size:9px;color:var(--ink3)">未连接</span><span class="sw on" id="sSync"></span></span></div>
         <div class="set-row"><b>同步令牌</b><input id="sToken" type="password" placeholder="粘贴 GitHub Token（每台设备一次）" style="width:190px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:11px;padding:6px 8px"></div>
         <div class="set-row"><b>立即同步</b><span class="r" style="color:var(--gold);cursor:pointer" id="sSyncGo">同步</span></div>
         <div class="set-row"><b>退出登录</b><span class="r" style="color:var(--up);cursor:pointer" id="sLogout">退出</span></div>
-      </div>
-      <div class="panel"><h3>方案管理 <span class="r">新建 / 编辑 / 重命名 / 删除</span></h3>
+      </div></div>
+      <div class="panel" data-fold-key="plan"><h3 class="fold-hd">方案管理<span class="fold-ic">▾</span></h3>
+      <div class="fold-bd"> <span class="r">新建 / 编辑 / 重命名 / 删除</span></h3>
         <div id="sPlans"></div>
         <div class="set-row" style="border:0"><button class="btn" style="font-size:11px;padding:8px 16px" id="sAddPlan">＋ 新建方案</button></div>
-      </div>
-      <div class="panel"><h3>建仓逻辑管理 <span class="r">自定义每档加仓克重</span></h3>
+      </div></div>
+      <div class="panel" data-fold-key="logic"><h3 class="fold-hd">建仓逻辑管理<span class="fold-ic">▾</span></h3>
+      <div class="fold-bd">
         <div id="sLogics"></div>
         <div class="set-row" style="border:0;gap:8px"><button class="btn" style="font-size:11px;padding:8px 14px" id="sAddLogic">＋ 新建逻辑</button><button class="btn" style="font-size:11px;padding:8px 14px;background:linear-gradient(135deg,#F0C96A,#A67B1E);color:#171007;border-color:transparent" id="sSaveLogics">保存全部逻辑</button></div>
-      </div>
-      <div class="panel"><h3>数据管理</h3>
+      </div></div>
+      <div class="panel" data-fold-key="data"><h3 class="fold-hd">数据管理<span class="fold-ic">▾</span></h3>
+      <div class="fold-bd">
         <div class="set-row"><b>迁移旧版数据</b><span class="r" style="color:var(--gold);cursor:pointer" id="sMigrate">导入</span></div>
         <div class="set-row"><b>导出 Excel</b><span class="r" style="color:var(--gold);cursor:pointer" id="sExcel">导出</span></div>
         <div class="set-row"><b>备份数据</b><span class="r" style="color:var(--gold);cursor:pointer" id="sBackup">下载备份</span></div>
         <div class="set-row"><b>恢复数据</b><span class="r" style="color:var(--gold);cursor:pointer" id="sRestore">导入恢复</span></div>
         <div class="set-row"><b>初始化清仓</b><span class="r" style="color:var(--up);cursor:pointer" id="sReset">清空</span></div>
-      </div>
-      <div class="panel"><h3>界面设置</h3>
+      </div></div>
+      <div class="panel" data-fold-key="ui"><h3 class="fold-hd">界面设置<span class="fold-ic">▾</span></h3>
+      <div class="fold-bd">
         <div class="set-row"><b>日夜主题</b><span class="sw on" id="sTheme"></span></div>
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
         <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.7 · 单仓位模型</span></div>
-      </div>
+      </div></div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
   </div>
@@ -1189,6 +1198,22 @@ function doLogin(user,pass){
 }
 /* ================= 事件 ================= */
 function bindEvents(){
+  // 设置页面板折叠（状态记忆）
+  var FOLD_KEY='jcj_fold_v57';
+  document.querySelectorAll('.panel[data-fold-key]').forEach(function(p){
+    var k=p.getAttribute('data-fold-key');
+    var h=p.querySelector('.fold-hd'); if(!h) return;
+    h.addEventListener('click',function(){
+      var folded=p.classList.toggle('folded');
+      try{ var F=JSON.parse(localStorage.getItem(FOLD_KEY)||'{}'); F[k]=folded; localStorage.setItem(FOLD_KEY,JSON.stringify(F)); }catch(e){}
+    });
+  });
+  try{
+    var F=JSON.parse(localStorage.getItem(FOLD_KEY)||'{}');
+    document.querySelectorAll('.panel[data-fold-key]').forEach(function(p){
+      if(F[p.getAttribute('data-fold-key')]) p.classList.add('folded');
+    });
+  }catch(e){}
   el('lgBtn').onclick=function(){ doLogin(el('lgUser').value.trim(),el('lgPass').value); };
   el('lgPass').addEventListener('keydown',function(e){ if(e.key==='Enter') doLogin(el('lgUser').value.trim(),el('lgPass').value); });
   el('btnLogout').onclick=function(){ curUser=null;curState=null; el('app').classList.add('hide'); el('loginView').classList.remove('hide'); };
