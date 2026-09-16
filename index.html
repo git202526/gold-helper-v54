@@ -270,7 +270,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo">金</div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.16 · 止盈按持仓上限分配批次</div>
+    <div class="vs" id="verLogin">V5.17 · 动态仓位建仓建议</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" value="admin" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -285,7 +285,7 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo">金</div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.16 · 止盈按持仓上限分配批次</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.17 · 动态仓位建仓建议</span></div>
     <div class="tb-sp"></div>
     <div class="tb-user"><span id="tbName"></span><div class="av" id="tbAv">A</div></div>
     <button class="icon-btn" id="btnTheme" title="日夜切换">🌗</button>
@@ -367,7 +367,7 @@ td,th{font-size:10px;padding:6px 4px}
 
   <!-- 计划 -->
   <div id="view-plan" class="hide">
-    <div class="panel"><h3>建仓计划 <select id="plPick" class="mini-sel" title="切换方案"></select><span class="r" id="plSel" style="display:none"></span></h3><table id="plTable"></table></div>
+    <div class="panel"><h3>建仓计划 <select id="plPick" class="mini-sel" title="切换方案"></select><span class="r" id="plSel" style="display:none"></span><span class="r" id="plRemain" style="font-weight:600"></span></h3><table id="plTable"></table></div>
     <div class="panel"><h3>卖出汇总 <span class="r" id="plSellSel">按方案</span></h3><div class="sell-sum" id="plSellSum"></div></div>
     <div class="panel"><h3>止盈目标 <span class="r">按当前持仓推算</span></h3><div class="tp-bar" id="plTpBar"></div></div>
     <div class="panel"><h3>止盈计划 <span class="r">真实卖出价 → 盈亏 → 写流水</span></h3><div class="tp-grid" id="plTakeProfit"></div></div>
@@ -422,7 +422,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.16 · 止盈按持仓上限分配批次</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.17 · 动态仓位建仓建议</span></div>
       </div></div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -450,8 +450,8 @@ td,th{font-size:10px;padding:6px 4px}
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.16';
-var APP_VER_NOTE='止盈按持仓上限分配批次';
+var APP_VER='V5.17';
+var APP_VER_NOTE='动态仓位建仓建议';
 var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150];      // 0~15 档（16档）
 var BASE1=[0,0,0,0,0,5,7,9,12,16,22,30,42,61,96,0];           // 逻辑1：5档起，14档满仓
 var BASE2=[0,0,0,0,0,0,12,0,24,0,48,0,96,0,120,0];            // 逻辑2：-60/-80/-100/-120/-140
@@ -536,12 +536,16 @@ function judge(plan,price){
   var lk=plan.config.logic||'L1';
   var t=currentTier(plan.config.high,price);
   var row=calcProfile(plan.config.high,plan.config.cap)[t];
-  if(p.grams<=0){
-    if(row && row[lk] && row[lk].g>0){ st.action='建议买入',st.grams=row[lk].g,st.msg=t+'档触发 · '+logicName(lk)+'建议建仓',st.cls='tag-wa'; return st; }
-    st.msg='暂无持仓，等待回撤触发建仓档'; return st;
+  // 动态剩余额度：上限 - 当前持仓（卖出释放额度，跌回档位可继续分配，支持多轮行情循环建仓）
+  var remain=Math.round((plan.config.cap-p.grams)*10000)/10000;
+  if(row && row[lk] && row[lk].g>0 && remain>0.0001){
+    var g=Math.min(row[lk].g,remain);
+    st.action='建议买入',st.grams=g,
+    st.msg=(p.grams<=0?t+'档触发 · '+logicName(lk)+'建议建仓（剩余额度 '+fmtG(remain)+'g）':t+'档触发 · '+logicName(lk)+'建议加仓（剩余额度 '+fmtG(remain)+'g）'),
+    st.cls='tag-wa';
+    return st;
   }
   if(price>=avg+10){ st.action='分批止盈',st.grams=Math.round(p.grams*TP[0]*10000)/10000,st.msg='已回本，可启动第1批止盈',st.cls='tag-ok'; return st; }
-  if(row && row[lk] && row[lk].g>0 && p.grams<plan.config.cap){ st.action='建议买入',st.grams=row[lk].g,st.msg=t+'档触发 · '+logicName(lk)+'建议加仓',st.cls='tag-wa'; return st; }
   if(p.grams>=plan.config.cap){ st.action='满仓',st.msg='已达建仓上限',st.cls='tag-bd'; return st; }
   if(price>=plan.config.high+20){ st.action='搏高止盈',st.grams=p.grams,st.msg='高于高点+20，搏高仓卖出',st.cls='tag-ok'; return st; }
   return st;
@@ -1056,6 +1060,8 @@ function renderPlan(){
   pick.value=selPlan;
   el('plSel').textContent='纯展示 · '+selPlan;
   var p=st.plans[selPlan], rows=calcProfile(p.config.high,p.config.cap);
+  var hg=posAgg(p).grams, remain=Math.round((p.config.cap-hg)*10000)/10000;
+  el('plRemain').textContent=(hg>0.0001?'持仓 '+fmtG(hg)+'g · ':'')+'剩余可买 '+fmtG(Math.max(remain,0))+'g';
   var price=priceNow(), cur=price?currentTier(p.config.high,price):-1;
   var lk=p.config.logic||'L1';
   var html='<tr><th>档位</th><th>参考价</th><th>'+lk+'推荐</th><th>'+lk+'目标</th><th>'+lk+'均价</th></tr>';
