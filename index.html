@@ -267,7 +267,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo">金</div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.12 · 克重4位精度</div>
+    <div class="vs" id="verLogin">V5.13 · 金价卡片仅总览</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" value="admin" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -282,20 +282,13 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo">金</div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.12 · 克重4位精度</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.13 · 金价卡片仅总览</span></div>
     <div class="tb-sp"></div>
     <div class="tb-user"><span id="tbName"></span><div class="av" id="tbAv">A</div></div>
     <button class="icon-btn" id="btnTheme" title="日夜切换">🌗</button>
     <button class="icon-btn" id="btnLogout" title="退出">⏻</button>
   </div>
 
-  <div class="quotes">
-    <div class="q"><div class="l">人民币金价</div><div class="v gold" id="qCny">--</div><div class="d" id="qCnyD"></div></div>
-    <div class="q"><div class="l">伦敦金现货</div><div class="v gold" id="qUsd">--</div><div class="d" id="qUsdD"></div></div>
-    <div class="q"><div class="l">汇率</div><div class="v" id="qFx">--</div><div class="d d-dn" id="qFxD"></div></div>
-    <div class="q"><div class="l">更新时间</div><div class="v" id="qTime" style="font-size:18px">--</div><div class="d" style="color:var(--ink3)" id="qState">等待刷新</div></div>
-    <div class="q"><div class="l">回本提醒</div><div class="v" id="qRemind" style="font-size:15px">--</div><div class="d" style="color:var(--ink3)">金价 ≥ 均价+10</div></div>
-  </div>
 
   <div class="remind-bar" id="remindBar"><span id="remindBarTxt"></span><span class="x" id="remindBarX">×</span></div>
 
@@ -310,6 +303,14 @@ td,th{font-size:10px;padding:6px 4px}
 
   <!-- 总览 -->
   <div id="view-overview">
+
+  <div class="quotes">
+    <div class="q"><div class="l">人民币金价</div><div class="v gold" id="qCny">--</div><div class="d" id="qCnyD"></div></div>
+    <div class="q"><div class="l">伦敦金现货</div><div class="v gold" id="qUsd">--</div><div class="d" id="qUsdD"></div></div>
+    <div class="q"><div class="l">汇率</div><div class="v" id="qFx">--</div><div class="d d-dn" id="qFxD"></div></div>
+    <div class="q"><div class="l">更新时间</div><div class="v" id="qTime" style="font-size:18px">--</div><div class="d" style="color:var(--ink3)" id="qState">等待刷新</div></div>
+    <div class="q"><div class="l">回本提醒</div><div class="v" id="qRemind" style="font-size:15px">--</div><div class="d" style="color:var(--ink3)">金价 ≥ 均价+10</div></div>
+  </div>
     <div class="hero">
       <div class="hc hero-main"><div class="l">总资产</div><div class="v big gold" id="oAsset">0</div><div class="s" id="oAssetS">总持仓 0g · 0 仓位</div></div>
       <div class="hc"><div class="l">总浮动盈亏</div><div class="v" id="oFloat">0</div><div class="s" id="oFloatS">--</div></div>
@@ -418,7 +419,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.12 · 克重4位精度</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.13 · 金价卡片仅总览</span></div>
       </div></div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -446,8 +447,8 @@ td,th{font-size:10px;padding:6px 4px}
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.12';
-var APP_VER_NOTE='克重4位精度';
+var APP_VER='V5.13';
+var APP_VER_NOTE='金价卡片仅总览';
 var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150];      // 0~15 档（16档）
 var BASE1=[0,0,0,0,0,5,7,9,12,16,22,30,42,61,96,0];           // 逻辑1：5档起，14档满仓
 var BASE2=[0,0,0,0,0,0,12,0,24,0,48,0,96,0,120,0];            // 逻辑2：-60/-80/-100/-120/-140
