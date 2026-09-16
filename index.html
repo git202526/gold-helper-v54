@@ -166,7 +166,7 @@ html[data-theme="light"] .sw{background:#C4CDDE}
 .chart{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .chart h4{font-size:9.5px;color:var(--ink2);font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between}
 .chart h4 b{color:var(--gold)}
-.area{position:relative;height:52px}
+.area{position:relative;height:120px}
 .area svg{position:absolute;inset:0;width:100%;height:100%}
 .toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);background:var(--card2);border:1px solid var(--gold);color:var(--ink);font-size:12px;padding:11px 20px;border-radius:12px;z-index:120;box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;max-width:86vw;text-align:center}
 .toast.show{opacity:1}
@@ -276,7 +276,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo">金</div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.23 · 建仓计划表可折叠</div>
+    <div class="vs" id="verLogin">V5.24 · 分析柱状图加高</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" value="admin" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -291,7 +291,7 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo">金</div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.23 · 建仓计划表可折叠</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.24 · 分析柱状图加高</span></div>
     <div class="tb-sp"></div>
     <div class="tb-user"><span id="tbName"></span><div class="av" id="tbAv">A</div></div>
     <button class="icon-btn" id="btnTheme" title="日夜切换">🌗</button>
@@ -387,9 +387,9 @@ td,th{font-size:10px;padding:6px 4px}
       <div class="panel"><h3>多方案对比</h3><table id="aCompare"></table></div>
     </div>
     <div class="charts" style="margin-top:12px">
-      <div class="chart"><h4>持仓占比 <b>按方案</b></h4><div class="area"><svg viewBox="0 0 300 52" preserveAspectRatio="none" id="cShare"></svg></div></div>
-      <div class="chart"><h4>已实现 vs 浮动</h4><div class="area"><svg viewBox="0 0 300 52" preserveAspectRatio="none" id="cPnl"></svg></div></div>
-      <div class="chart"><h4>仓位占比（持仓/上限）</h4><div class="area"><svg viewBox="0 0 300 52" preserveAspectRatio="none" id="cCap"></svg></div></div>
+      <div class="chart"><h4>持仓占比 <b>按方案</b></h4><div class="area"><svg viewBox="0 0 300 120" preserveAspectRatio="none" id="cShare"></svg></div></div>
+      <div class="chart"><h4>已实现 vs 浮动</h4><div class="area"><svg viewBox="0 0 300 120" preserveAspectRatio="none" id="cPnl"></svg></div></div>
+      <div class="chart"><h4>仓位占比（持仓/上限）</h4><div class="area"><svg viewBox="0 0 300 120" preserveAspectRatio="none" id="cCap"></svg></div></div>
     </div>
   </div>
 
@@ -428,7 +428,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.23 · 建仓计划表可折叠</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.24 · 分析柱状图加高</span></div>
       </div></div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -456,8 +456,8 @@ td,th{font-size:10px;padding:6px 4px}
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.23';
-var APP_VER_NOTE='建仓计划表可折叠';
+var APP_VER='V5.24';
+var APP_VER_NOTE='分析柱状图加高';
 var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150];      // 0~15 档（16档）
 var BASE1=[0,0,0,0,0,5,7,9,12,16,22,30,42,61,96,0];           // 逻辑1：5档起，14档满仓
 var BASE2=[0,0,0,0,0,0,12,0,24,0,48,0,96,0,120,0];            // 逻辑2：-60/-80/-100/-120/-140
@@ -1176,30 +1176,30 @@ function renderCharts(names){
   var tot=names.reduce(function(s,n){return s+posAgg(st.plans[n]).grams},0)||1;
   var x=20, w=60;
   names.slice(0,4).forEach(function(n,i){
-    var pct=posAgg(st.plans[n]).grams/tot, h=Math.max(6,pct*40);
-    share+='<rect x="'+x+'" y="'+(46-h)+'" width="'+w+'" height="'+h+'" rx="3" fill="'+['#E8B34B','#F2555A','#34D399','#8B7CF6'][i%4]+'"/>';
-    share+='<text x="'+(x+w/2)+'" y="'+(46-h-3)+'" text-anchor="middle" font-size="7" fill="var(--ink2)">'+(pct>=0.06?Math.round(pct*100)+'%':'')+'</text>';
-    share+='<text x="'+(x+w/2)+'" y="51" text-anchor="middle" font-size="6.5" fill="var(--ink3)">'+n.slice(0,3)+'</text>';
+    var pct=posAgg(st.plans[n]).grams/tot, h=Math.max(10,pct*92);
+    share+='<rect x="'+x+'" y="'+(110-h)+'" width="'+w+'" height="'+h+'" rx="3" fill="'+['#E8B34B','#F2555A','#34D399','#8B7CF6'][i%4]+'"/>';
+    share+='<text x="'+(x+w/2)+'" y="'+(110-h-5)+'" text-anchor="middle" font-size="8" fill="var(--ink2)">'+(pct>=0.06?Math.round(pct*100)+'%':'')+'</text>';
+    share+='<text x="'+(x+w/2)+'" y="115" text-anchor="middle" font-size="7" fill="var(--ink3)">'+n.slice(0,3)+'</text>';
     x+=w+16;
   });
-  el('cShare').innerHTML=share+'<path d="M0 50 H300" stroke="var(--line)" stroke-width="1"/>';
+  el('cShare').innerHTML=share+'<path d="M0 110 H300" stroke="var(--line)" stroke-width="1"/>';
   function aFloat(){ return aggregate(state(),priceNow()).float; }
   function aReal(){ return aggregate(state(),priceNow()).realized; }
   var af=aFloat(), ar=aReal(), at=af+ar;
   var m=Math.max(Math.abs(af),Math.abs(ar),Math.abs(at),1);
-  function bar(cx,cw,v,color){ var h=Math.min(38,Math.abs(v)/m*38), y=v>=0?23-h:23; return '<rect x="'+cx+'" y="'+y+'" width="'+cw+'" height="'+h+'" rx="3" fill="'+color+'"/>'; }
-  function lab(cx,v,color){ return '<text x="'+cx+'" y="'+(v>=0?13:35)+'" text-anchor="middle" font-size="7" fill="'+color+'">'+fmt(v,0)+'</text>'; }
+  function bar(cx,cw,v,color){ var h=Math.min(88,Math.abs(v)/m*88), y=v>=0?60-h:60; return '<rect x="'+cx+'" y="'+y+'" width="'+cw+'" height="'+h+'" rx="3" fill="'+color+'"/>'; }
+  function lab(cx,v,color){ return '<text x="'+cx+'" y="'+(v>=0?28:92)+'" text-anchor="middle" font-size="8" fill="'+color+'">'+fmt(v,0)+'</text>'; }
   pnl=lab(65,af,'#F2555A')+bar(40,50,af,'#F2555A')+lab(165,ar,'#E8B34B')+bar(140,50,ar,'#E8B34B')+lab(265,at,'#8B7CF6')+bar(240,50,at,'#8B7CF6');
-  el('cPnl').innerHTML=pnl+'<path d="M0 26 H300" stroke="var(--line)" stroke-width="1" stroke-dasharray="3 4"/>';
+  el('cPnl').innerHTML=pnl+'<path d="M0 60 H300" stroke="var(--line)" stroke-width="1" stroke-dasharray="3 4"/>';
   x=20;
   names.slice(0,4).forEach(function(n,i){
-    var p=st.plans[n], pct=Math.min(1,posAgg(p).grams/p.config.cap), h=Math.max(4,pct*36);
-    cap+='<rect x="'+x+'" y="'+(46-h)+'" width="'+w+'" height="'+h+'" rx="3" fill="'+['#8B7CF6','#5AC8FA','#FF9F0A','#34D399'][i%4]+'"/>';
-    cap+='<text x="'+(x+w/2)+'" y="'+(46-h-3)+'" text-anchor="middle" font-size="7" fill="var(--ink2)">'+(pct>=0.06?Math.round(pct*100)+'%':'')+'</text>';
-    cap+='<text x="'+(x+w/2)+'" y="51" text-anchor="middle" font-size="6.5" fill="var(--ink3)">'+n.slice(0,3)+'</text>';
+    var p=st.plans[n], pct=Math.min(1,posAgg(p).grams/p.config.cap), h=Math.max(8,pct*90);
+    cap+='<rect x="'+x+'" y="'+(110-h)+'" width="'+w+'" height="'+h+'" rx="3" fill="'+['#8B7CF6','#5AC8FA','#FF9F0A','#34D399'][i%4]+'"/>';
+    cap+='<text x="'+(x+w/2)+'" y="'+(110-h-5)+'" text-anchor="middle" font-size="8" fill="var(--ink2)">'+(pct>=0.06?Math.round(pct*100)+'%':'')+'</text>';
+    cap+='<text x="'+(x+w/2)+'" y="115" text-anchor="middle" font-size="7" fill="var(--ink3)">'+n.slice(0,3)+'</text>';
     x+=w+16;
   });
-  el('cCap').innerHTML=cap+'<path d="M0 50 H300" stroke="var(--line)" stroke-width="1"/>';
+  el('cCap').innerHTML=cap+'<path d="M0 110 H300" stroke="var(--line)" stroke-width="1"/>';
 }
 function renderSettings(){
   var st=state(); if(!st) return;
