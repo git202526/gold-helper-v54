@@ -227,6 +227,9 @@ html[data-theme="light"] .modal-btn.ok{color:#fff}
 .remind-bar.show{display:flex}
 @keyframes barflash{0%,100%{box-shadow:0 0 0 0 rgba(242,85,90,.25)}50%{box-shadow:0 0 18px 2px rgba(242,85,90,.35)}}
 .remind-bar .x{margin-left:auto;cursor:pointer;font-size:14px;opacity:.7;padding:2px 6px}
+.mini-sel{background:var(--card2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:3px 8px;font-size:13px;max-width:150px;margin-left:6px;cursor:pointer;}
+.mini-sel option{background:var(--bg);color:var(--ink);}
+
 /* ===== 手机 ===== */
 @media(max-width:720px){
 #app{padding:10px 10px 86px}
@@ -267,7 +270,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo">金</div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.13 · 金价卡片仅总览</div>
+    <div class="vs" id="verLogin">V5.14 · 计划方案切换+列头精简</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" value="admin" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -282,7 +285,7 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo">金</div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.13 · 金价卡片仅总览</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.14 · 计划方案切换+列头精简</span></div>
     <div class="tb-sp"></div>
     <div class="tb-user"><span id="tbName"></span><div class="av" id="tbAv">A</div></div>
     <button class="icon-btn" id="btnTheme" title="日夜切换">🌗</button>
@@ -364,7 +367,7 @@ td,th{font-size:10px;padding:6px 4px}
 
   <!-- 计划 -->
   <div id="view-plan" class="hide">
-    <div class="panel"><h3>建仓计划 <span class="r" id="plSel">纯展示 · 参考用</span></h3><table id="plTable"></table></div>
+    <div class="panel"><h3>建仓计划 <select id="plPick" class="mini-sel" title="切换方案"></select><span class="r" id="plSel" style="display:none"></span></h3><table id="plTable"></table></div>
     <div class="panel"><h3>卖出汇总 <span class="r" id="plSellSel">按方案</span></h3><div class="sell-sum" id="plSellSum"></div></div>
     <div class="panel"><h3>止盈目标 <span class="r">按当前持仓推算</span></h3><div class="tp-bar" id="plTpBar"></div></div>
     <div class="panel"><h3>止盈计划 <span class="r">真实卖出价 → 盈亏 → 写流水</span></h3><div class="tp-grid" id="plTakeProfit"></div></div>
@@ -419,7 +422,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.13 · 金价卡片仅总览</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.14 · 计划方案切换+列头精简</span></div>
       </div></div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -447,8 +450,8 @@ td,th{font-size:10px;padding:6px 4px}
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.13';
-var APP_VER_NOTE='金价卡片仅总览';
+var APP_VER='V5.14';
+var APP_VER_NOTE='计划方案切换+列头精简';
 var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150];      // 0~15 档（16档）
 var BASE1=[0,0,0,0,0,5,7,9,12,16,22,30,42,61,96,0];           // 逻辑1：5档起，14档满仓
 var BASE2=[0,0,0,0,0,0,12,0,24,0,48,0,96,0,120,0];            // 逻辑2：-60/-80/-100/-120/-140
@@ -466,8 +469,8 @@ function genLogicMeta(gap,start,base,rate,reduce,capLimit){
   for(var pos=start; pos<=150.001; pos+=gap){
     var idx=Math.floor(pos/10+0.0001);
     if(idx>=1&&idx<=15){
-      var g=base*Math.pow(rate,n); n++;
-      if(cum+g<=capLimit+0.0001){ b[idx]=Math.round(g*10000)/10000; cum+=g; }
+      var g=Math.round(base*Math.pow(rate,n)*10000)/10000; n++;
+      if(cum+g<=capLimit+0.0001){ b[idx]=g; cum=Math.round((cum+g)*10000)/10000; }
       else if(cum<capLimit-0.0001){ b[idx]=Math.round((capLimit-cum)*10000)/10000; cum=capLimit; }
       else { break; }
     }
@@ -497,13 +500,27 @@ function calcProfile(high,cap){
     var row={tier:i,draw:DRAWDOWN[i],price:high-DRAWDOWN[i]};
     keys.forEach(function(k){
       var g=Math.round((logicBase(k)[i]||0)*scaleOf(cap,k)*10000)/10000;
-      cum[k]+=g; cc[k]+=g*row.price;
-      row[k]={g:g,c:Math.round(cum[k]*10000)/10000,a:cum[k]>0?Math.round(cc[k]/cum[k]*100)/100:0};
+      cum[k]=Math.round((cum[k]+g)*10000)/10000; cc[k]+=g*row.price;
+      row[k]={g:g,c:cum[k],a:cum[k]>0?Math.round(cc[k]/cum[k]*100)/100:0,cc:cc[k]};
     });
     row.g1=row['L1']?row['L1'].g:0; row.c1=row['L1']?row['L1'].c:0;
     row.g2=row['L2']?row['L2'].g:0; row.c2=row['L2']?row['L2'].c:0;
     rows.push(row);
   }
+  // 修正：缩放+舍入后累计未达方案上限时，最后一个非零档补足（保证累计=上限）
+  keys.forEach(function(k){
+    var last=-1, i;
+    for(i=0;i<rows.length;i++){ if(rows[i][k]&&rows[i][k].g>0.00001) last=i; }
+    if(last>=0 && Math.abs(rows[last][k].c-cap)>0.00001){
+      var diff=Math.round((cap-rows[last][k].c)*10000)/10000;
+      var r=rows[last][k];
+      r.g=Math.round((r.g+diff)*10000)/10000;
+      r.cc=r.cc+diff*rows[last].price;
+      r.c=cap;
+      r.a=Math.round(r.cc/cap*100)/100;
+      for(var j=last+1;j<rows.length;j++){ if(rows[j][k]){ rows[j][k].c=cap; rows[j][k].a=r.a; } }
+    }
+  });
   return rows;
 }
 /* 当前档位：价格越过其参考价的最高档（0 档=高点附近） */
@@ -1026,14 +1043,22 @@ function renderPosition(){
 }
 function renderPlan(){
   var st=state(); if(!st) return;
-  var names=Object.keys(st.plans), selPlan=names[0]||'默认';
-  // 优先选中「有持仓」的方案，止盈执行才有效
-  names.forEach(function(n){ if(posAgg(st.plans[n]).grams>0.0001){ selPlan=n; } });
+  var names=Object.keys(st.plans);
+  var saved=localStorage.getItem('jcj_planSel_v54');
+  var selPlan=(saved&&names.indexOf(saved)>=0)?saved:null;
+  if(!selPlan){
+    selPlan=names[0]||'默认';
+    // 优先选中「有持仓」的方案，止盈执行才有效
+    names.forEach(function(n){ if(posAgg(st.plans[n]).grams>0.0001){ selPlan=n; } });
+  }
+  var pick=el('plPick');
+  pick.innerHTML=names.map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
+  pick.value=selPlan;
   el('plSel').textContent='纯展示 · '+selPlan;
   var p=st.plans[selPlan], rows=calcProfile(p.config.high,p.config.cap);
   var price=priceNow(), cur=price?currentTier(p.config.high,price):-1;
   var lk=p.config.logic||'L1';
-  var html='<tr><th>档位</th><th>参考价</th><th>'+logicName(lk)+'('+lk+') 推荐加仓</th><th>'+lk+' 累计目标</th><th>'+lk+' 累计均价</th></tr>';
+  var html='<tr><th>档位</th><th>参考价</th><th>'+lk+'推荐</th><th>'+lk+'目标</th><th>'+lk+'均价</th></tr>';
   rows.forEach(function(r){
     var v=r[lk]||{g:0,c:0,a:0};
     var row='<tr'+(r.tier===cur?' class="cur"':'')+'><td>'+r.tier+'档 '+(r.draw===0?'高点':'-'+r.draw)+'</td><td>'+r.price.toFixed(2)+'</td><td>'+(v.g?fmtG(v.g)+'g':'--')+'</td><td>'+(v.c?fmtG(v.c)+'g':'--')+'</td><td>'+(v.a?v.a.toFixed(2):'--')+'</td></tr>';
@@ -1347,6 +1372,7 @@ function bindEvents(){
     });
     st.settings.logics=L; saveState(curUser,st); renderAll(); toast('建仓逻辑已保存');
   };
+  el('plPick').onchange=function(){ localStorage.setItem('jcj_planSel_v54',this.value); renderPlan(); };
   el('sAddLogic').onclick=function(){
     var nm=prompt('新逻辑名称（如：逻辑3）'); if(!nm) return;
     var st=state(), L=getLogics(), key='L3', i;
