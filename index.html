@@ -267,7 +267,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo">金</div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.7 · 单仓位模型</div>
+    <div class="vs" id="verLogin">V5.8 · 16档位</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" value="admin" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -282,7 +282,7 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo">金</div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.7 · 单仓位模型</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.8 · 16档位</span></div>
     <div class="tb-sp"></div>
     <div class="tb-user"><span id="tbName"></span><div class="av" id="tbAv">A</div></div>
     <button class="icon-btn" id="btnTheme" title="日夜切换">🌗</button>
@@ -418,7 +418,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.7 · 单仓位模型</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.8 · 16档位</span></div>
       </div></div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -446,11 +446,11 @@ td,th{font-size:10px;padding:6px 4px}
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.7';
-var APP_VER_NOTE='单仓位模型';
-var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120];      // 0~12 档
-var BASE1=[0,0,0,0,0,6,10,17,27,44,72,124,0];                 // 逻辑1：5档起
-var BASE2=[0,0,0,0,0,0,20,0,40,0,80,0,160];                   // 逻辑2：-60/-80/-100/-120
+var APP_VER='V5.8';
+var APP_VER_NOTE='16档位';
+var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150];      // 0~15 档（16档）
+var BASE1=[0,0,0,0,0,5,7,9,12,16,22,30,42,61,96,0];           // 逻辑1：5档起，14档满仓
+var BASE2=[0,0,0,0,0,0,12,0,24,0,48,0,96,0,120,0];            // 逻辑2：-60/-80/-100/-120/-140
 /* 建仓逻辑库：settings.logics = { key:{name,base[13]} }；key 同时为持仓槽位标识（L1→l1） */
 function defaultLogics(){ return {L1:{name:'逻辑1',base:BASE1.slice()},L2:{name:'逻辑2',base:BASE2.slice()}}; }
 function getLogics(){ var st=state(); return (st&&st.settings&&st.settings.logics)||defaultLogics(); }
@@ -460,10 +460,10 @@ function logicBase(key){ var L=getLogics(); return (L[key]&&L[key].base)||(key==
 function ensureLogics(st){ if(!st.settings) st.settings={}; if(!st.settings.logics) st.settings.logics=defaultLogics(); return st.settings.logics; }
 /* 简易建仓规则生成：起点距高点 start 元，每隔 gap 元加仓一次，克重 base×rate^n，回升 reduce 元触发减仓提示 */
 function genLogicMeta(gap,start,base,rate,reduce){
-  var b=[0,0,0,0,0,0,0,0,0,0,0,0,0], i, n=0;
-  for(var pos=start; pos<=120.001; pos+=gap){
+  var b=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], i, n=0;
+  for(var pos=start; pos<=150.001; pos+=gap){
     var idx=Math.floor(pos/10+0.0001);
-    if(idx>=1&&idx<=12){
+    if(idx>=1&&idx<=15){
       b[idx]=Math.round(base*Math.pow(rate,n)*10000)/10000;
       n++;
     }
@@ -549,6 +549,15 @@ function loadState(user){
     if(!p.realized){ p.realized={soldGrams:0,soldCount:0,soldAvg:0,soldAmount:0,soldCost:0,profit:0,loss:0,net:0}; }
     if(p.realized.soldCost===undefined){ p.realized.soldCost=0; }
     if(!p.config){ p.config={name:n,high:991.95,cap:150,openDate:null}; }
+  });
+  // 迁移：建仓逻辑 base 13档 → 16档（原 0~12 档保留，-130/-140/-150 补 0，可按参数重新生成）
+  Object.keys(st.settings.logics||{}).forEach(function(k){
+    var b=st.settings.logics[k]&&st.settings.logics[k].base;
+    if(b&&b.length<16){
+      var nb=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+      for(var i=0;i<b.length&&i<16;i++) nb[i]=b[i];
+      st.settings.logics[k].base=nb;
+    }
   });
   if(!st.trades){ st.trades=[]; }
   if(!st.settings){ st.settings={profitStep:40,remindOn:true,theme:'dark',syncOn:true,gitToken:''}; }
@@ -927,8 +936,9 @@ function renderBuild(){
   else { el('bBuyP').placeholder='输入真实成交价'; el('bSellP').placeholder='输入真实成交价'; }
   // 档位标尺与 chips
   var rows=calcProfile(p.config.high,p.config.cap), cur=price?currentTier(p.config.high,price):-1;
-  var mk=''; rows.forEach(function(r,i){ if(i>0&&i<12) mk+='<div class="mk" style="left:'+(i*100/12)+'%"></div>'; });
-  el('bRuler').innerHTML='<div class="fill" style="width:'+(cur>=0?Math.min(100,cur*100/12+8):0)+'%"></div><div class="cur" style="left:'+(cur>=0?Math.min(97,cur*100/12+4):50)+'%"></div>'+mk;
+  var N=rows.length-1;
+  var mk=''; rows.forEach(function(r,i){ if(i>0&&i<N) mk+='<div class="mk" style="left:'+(i*100/N)+'%"></div>'; });
+  el('bRuler').innerHTML='<div class="fill" style="width:'+(cur>=0?Math.min(100,cur*100/N+8):0)+'%"></div><div class="cur" style="left:'+(cur>=0?Math.min(97,cur*100/N+4):50)+'%"></div>'+mk;
   var chips=''; rows.forEach(function(r){
     var cls='tchip', tag='';
     if(r.tier<cur) cls+=' done', tag=' 已过';
