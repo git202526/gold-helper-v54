@@ -267,7 +267,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo">金</div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.10 · 上限截断分配</div>
+    <div class="vs" id="verLogin">V5.11 · 计划加累计均价</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" value="admin" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -282,7 +282,7 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo">金</div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.10 · 上限截断分配</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.11 · 计划加累计均价</span></div>
     <div class="tb-sp"></div>
     <div class="tb-user"><span id="tbName"></span><div class="av" id="tbAv">A</div></div>
     <button class="icon-btn" id="btnTheme" title="日夜切换">🌗</button>
@@ -418,7 +418,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.10 · 上限截断分配</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.11 · 计划加累计均价</span></div>
       </div></div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -446,8 +446,8 @@ td,th{font-size:10px;padding:6px 4px}
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.10';
-var APP_VER_NOTE='上限截断分配';
+var APP_VER='V5.11';
+var APP_VER_NOTE='计划加累计均价';
 var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150];      // 0~15 档（16档）
 var BASE1=[0,0,0,0,0,5,7,9,12,16,22,30,42,61,96,0];           // 逻辑1：5档起，14档满仓
 var BASE2=[0,0,0,0,0,0,12,0,24,0,48,0,96,0,120,0];            // 逻辑2：-60/-80/-100/-120/-140
@@ -490,14 +490,14 @@ function scaleOf(cap,lk){
 }
 /* 计划表：每档 参考价 / L1加仓 / L1累计 / L2加仓 / L2累计 */
 function calcProfile(high,cap){
-  var rows=[], i, keys=logicKeys(), cum={};
-  keys.forEach(function(k){ cum[k]=0; });
+  var rows=[], i, keys=logicKeys(), cum={}, cc={};
+  keys.forEach(function(k){ cum[k]=0; cc[k]=0; });
   for(i=0;i<DRAWDOWN.length;i++){
     var row={tier:i,draw:DRAWDOWN[i],price:high-DRAWDOWN[i]};
     keys.forEach(function(k){
       var g=Math.round((logicBase(k)[i]||0)*scaleOf(cap,k)*10000)/10000;
-      cum[k]+=g;
-      row[k]={g:g,c:Math.round(cum[k]*10000)/10000};
+      cum[k]+=g; cc[k]+=g*row.price;
+      row[k]={g:g,c:Math.round(cum[k]*10000)/10000,a:cum[k]>0?Math.round(cc[k]/cum[k]*100)/100:0};
     });
     row.g1=row['L1']?row['L1'].g:0; row.c1=row['L1']?row['L1'].c:0;
     row.g2=row['L2']?row['L2'].g:0; row.c2=row['L2']?row['L2'].c:0;
@@ -1032,10 +1032,10 @@ function renderPlan(){
   var p=st.plans[selPlan], rows=calcProfile(p.config.high,p.config.cap);
   var price=priceNow(), cur=price?currentTier(p.config.high,price):-1;
   var lk=p.config.logic||'L1';
-  var html='<tr><th>档位</th><th>参考价</th><th>'+logicName(lk)+'('+lk+') 推荐加仓</th><th>'+lk+' 累计目标</th></tr>';
+  var html='<tr><th>档位</th><th>参考价</th><th>'+logicName(lk)+'('+lk+') 推荐加仓</th><th>'+lk+' 累计目标</th><th>'+lk+' 累计均价</th></tr>';
   rows.forEach(function(r){
-    var v=r[lk]||{g:0,c:0};
-    var row='<tr'+(r.tier===cur?' class="cur"':'')+'><td>'+r.tier+'档 '+(r.draw===0?'高点':'-'+r.draw)+'</td><td>'+r.price.toFixed(2)+'</td><td>'+(v.g?fmtG(v.g)+'g':'--')+'</td><td>'+(v.c?fmtG(v.c)+'g':'--')+'</td></tr>';
+    var v=r[lk]||{g:0,c:0,a:0};
+    var row='<tr'+(r.tier===cur?' class="cur"':'')+'><td>'+r.tier+'档 '+(r.draw===0?'高点':'-'+r.draw)+'</td><td>'+r.price.toFixed(2)+'</td><td>'+(v.g?fmtG(v.g)+'g':'--')+'</td><td>'+(v.c?fmtG(v.c)+'g':'--')+'</td><td>'+(v.a?v.a.toFixed(2):'--')+'</td></tr>';
     html+=row;
   });
   el('plTable').innerHTML=html;
