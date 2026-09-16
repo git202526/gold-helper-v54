@@ -190,6 +190,14 @@ html[data-theme="light"] .modal-btn.ok{color:#fff}
 .pbtn.ok{color:#171007;background:linear-gradient(135deg,#F0C96A,#A67B1E);border-color:transparent}
 .pbtn.del{color:var(--up);border-color:rgba(242,85,90,.45);background:rgba(242,85,90,.08)}
 .pbtn:disabled{opacity:.4;cursor:default}
+/* 建仓逻辑管理样式 */
+.logic-meta{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px}
+.logic-meta label{display:flex;align-items:center;gap:3px;font-size:8px;color:var(--ink3);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:2px 6px}
+.logic-meta input{width:46px;background:transparent;border:0;color:var(--ink);font-size:10px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;padding:1px 0}
+.logic-meta input:focus{outline:none}
+.lg-sum{font-size:8px;color:var(--ink3);margin-right:2px}
+.logic-hd .pbtn{font-size:9px;padding:3px 8px}
+.pm-lg{background:var(--card);border:1px solid var(--line);border-radius:6px;color:var(--gold);font-size:10px;padding:2px 4px;margin-left:4px}
 .logic-row{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:9px;margin-bottom:8px}
 .logic-hd{display:flex;align-items:center;gap:8px;margin-bottom:7px}
 .logic-hd b{font-size:12px;color:var(--ink)}
@@ -255,7 +263,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo">金</div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.5 · 建仓逻辑管理</div>
+    <div class="vs" id="verLogin">V5.6 · 逻辑管理重构</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" value="admin" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -270,7 +278,7 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo">金</div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.5 · 建仓逻辑管理</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.6 · 逻辑管理重构</span></div>
     <div class="tb-sp"></div>
     <div class="tb-user"><span id="tbName"></span><div class="av" id="tbAv">A</div></div>
     <button class="icon-btn" id="btnTheme" title="日夜切换">🌗</button>
@@ -403,7 +411,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.5 · 建仓逻辑管理</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.6 · 逻辑管理重构</span></div>
       </div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -420,12 +428,19 @@ td,th{font-size:10px;padding:6px 4px}
     <div class="modal-btns"><button class="modal-btn cancel" id="priceCancel">取消</button><button class="modal-btn ok" id="priceOk">确认</button></div>
   </div>
 </div>
+<div class="modal-mask hide" id="confirmMask">
+  <div class="modal">
+    <div class="modal-t" id="confirmTitle">确认操作</div>
+    <div class="modal-ref" id="confirmMsg">--</div>
+    <div class="modal-btns"><button class="modal-btn cancel" id="confirmNo">取消</button><button class="modal-btn ok" id="confirmYes">确认</button></div>
+  </div>
+</div>
 
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.5';
-var APP_VER_NOTE='建仓逻辑管理';
+var APP_VER='V5.6';
+var APP_VER_NOTE='逻辑管理重构';
 var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120];      // 0~12 档
 var BASE1=[0,0,0,0,0,6,10,17,27,44,72,124,0];                 // 逻辑1：5档起
 var BASE2=[0,0,0,0,0,0,20,0,40,0,80,0,160];                   // 逻辑2：-60/-80/-100/-120
@@ -436,6 +451,21 @@ function logicKeys(){ return Object.keys(getLogics()); }
 function logicName(key){ var L=getLogics(); return (L[key]&&L[key].name)||key; }
 function logicBase(key){ var L=getLogics(); return (L[key]&&L[key].base)||(key==='L2'?BASE2:BASE1); }
 function ensureLogics(st){ if(!st.settings) st.settings={}; if(!st.settings.logics) st.settings.logics=defaultLogics(); return st.settings.logics; }
+/* 简易建仓规则生成：起点距高点 start 元，每隔 gap 元加仓一次，克重 base×rate^n，回升 reduce 元触发减仓提示 */
+function genLogicMeta(gap,start,base,rate,reduce){
+  var b=[0,0,0,0,0,0,0,0,0,0,0,0,0], i, n=0;
+  for(var pos=start; pos<=120.001; pos+=gap){
+    var idx=Math.floor(pos/10+0.0001);
+    if(idx>=1&&idx<=12){
+      b[idx]=Math.round(base*Math.pow(rate,n)*10000)/10000;
+      n++;
+    }
+  }
+  return {base:b,meta:{gap:gap,start:start,base:base,rate:rate,reduce:reduce}};
+}
+function logicMetaSummary(m){
+  return '间隔'+m.gap+'元 · 起点'+m.start+'元 · 基数'+m.base+'g · 递增'+m.rate+'倍 · 回升'+m.reduce+'元减仓';
+}
 var TP=[0.10,0.20,0.20,0.20,0.30];                            // 止盈 10/20/20/20 + 30搏高
 var TP_LABEL=['第1批 10%','第2批 20%','第3批 20%','第4批 20%','30% 搏高'];
 var TP_DESC=['高点-30','高点-20','高点-10','回到高点','高点+20 卖 / 跌回0档清仓'];
@@ -473,8 +503,9 @@ function judge(plan,price){
   if(p.grams<=0){ st.msg='暂无持仓，等待回撤触发建仓档'; return st; }
   if(price>=avg+10){ st.action='分批止盈',st.grams=Math.round(p.grams*TP[0]*10000)/10000,st.msg='已回本，可启动第1批止盈',st.cls='tag-ok'; return st; }
   var t=currentTier(plan.config.high,price);
+  var lk=plan.config.logic||'L1';
   var row=calcProfile(plan.config.high,plan.config.cap)[t];
-  if(row && row.g1>0 && p.grams<plan.config.cap){ st.action='建议买入',st.grams=row.g1,st.msg=t+'档触发 · 建议加仓',st.cls='tag-wa'; return st; }
+  if(row && row[lk] && row[lk].g>0 && p.grams<plan.config.cap){ st.action='建议买入',st.grams=row[lk].g,st.msg=t+'档触发 · '+logicName(lk)+'建议加仓',st.cls='tag-wa'; return st; }
   if(p.grams>=plan.config.cap){ st.action='满仓',st.msg='已达建仓上限',st.cls='tag-bd'; return st; }
   if(price>=plan.config.high+20){ st.action='搏高止盈',st.grams=p.grams,st.msg='高于高点+20，搏高仓卖出',st.cls='tag-ok'; return st; }
   return st;
@@ -483,9 +514,9 @@ function judge(plan,price){
 var USERS={admin:'admin123',uesr:'admin123'};
 var KEY_PREF='jcj_login_v1';
 function blankPos(){ return {grams:0,avg:0,cost:0}; }
-function blankPlan(name){ return {config:{name:name,high:991.95,cap:150,openDate:null},position:{l1:blankPos(),l2:blankPos()},realized:{soldGrams:0,soldCount:0,soldAvg:0,soldAmount:0,soldCost:0,profit:0,loss:0,net:0}}; }
+function blankPlan(name){ return {config:{name:name,high:991.95,cap:150,openDate:null,logic:'L1'},position:{l1:blankPos(),l2:blankPos()},realized:{soldGrams:0,soldCount:0,soldAvg:0,soldAmount:0,soldCost:0,profit:0,loss:0,net:0}}; }
 /* 仓位取数：方案 × 逻辑 独立持仓；聚合视图用 posAgg */
-function posOf(p,logic){ var k=String(logic).toLowerCase(); return p.position[k]||(p.position[k]=blankPos()); }
+function posOf(p,logic){ return logic==='L2'?p.position.l2:p.position.l1; }
 function posAgg(p){
   var g=0,c=0;
   Object.keys(p.position||{}).forEach(function(k){ g+=p.position[k].grams; c+=p.position[k].cost; });
@@ -591,7 +622,6 @@ function buy(user,st,planName,logic,grams,price){
   var key=planName+'·'+logic, p=st.plans[planName];
   if(!p){ return {ok:false,msg:'方案不存在'}; }
   var pos=posOf(p,logic);
-  if(!p.position[String(logic).toLowerCase()]){ p.position[String(logic).toLowerCase()]=pos; }
   pos.grams=Math.round((pos.grams+grams)*10000)/10000;
   pos.cost=Math.round((pos.cost+grams*price)*100)/100;
   pos.avg=Math.round(pos.cost/pos.grams*100)/100;
@@ -603,7 +633,6 @@ function buy(user,st,planName,logic,grams,price){
 function sell(user,st,planName,logic,grams,price){
   var p=st.plans[planName]; if(!p){ return {ok:false,msg:'方案不存在'}; }
   var pos=posOf(p,logic);
-  if(!p.position[String(logic).toLowerCase()]){ p.position[String(logic).toLowerCase()]=pos; }
   if(grams>pos.grams+0.0001){ return {ok:false,msg:'卖出量超过 '+planName+'·'+logic+' 持仓 '+pos.grams+'g'}; }
   var realized=Math.round((price-pos.avg)*grams*100)/100;
   var r=p.realized;
@@ -705,6 +734,13 @@ function priceNow(){ return FX.cny||0; }
 function toast(msg,err){ var t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); clearTimeout(toast._t); toast._t=setTimeout(function(){t.className='toast';},2200); }
 // 主题化价格输入弹框（替代原生 prompt）
 var priceCb=null;
+function confirmBox(title,msg,cb){
+  el('confirmTitle').textContent=title||'确认操作';
+  el('confirmMsg').textContent=msg||'';
+  el('confirmMask').classList.remove('hide');
+  confirmBox._cb=cb;
+}
+function closeConfirm(){ el('confirmMask').classList.add('hide'); confirmBox._cb=null; }
 function promptPrice(title,ref,cb){
   priceCb=cb;
   el('priceTitle').textContent=title;
@@ -721,6 +757,9 @@ el('priceOk').onclick=function(){
   var cb=priceCb; closePrice(); if(cb) cb(pr);
 };
 el('priceMask').addEventListener('click',function(e){ if(e.target===this){ closePrice(); if(priceCb) priceCb(null); } });
+  el('confirmYes').onclick=function(){ var cb=confirmBox._cb; closeConfirm(); if(cb) cb(); };
+  el('confirmNo').onclick=closeConfirm;
+  el('confirmMask').addEventListener('click',function(e){ if(e.target===this) closeConfirm(); });
 function el(id){ return document.getElementById(id); }
 var curUser=null,curState=null,curTab='overview';
 function state(){ return curState; }
@@ -883,9 +922,8 @@ function renderBuild(){
   // 方案下拉
   el('bBuyPlan').innerHTML=names.map(function(n){return '<option>'+n+'</option>'}).join('');
   el('bSellPlan').innerHTML=names.map(function(n){return '<option>'+n+'</option>'}).join('');
-  var lgKeys=logicKeys();
-  el('bBuyLogic').innerHTML=lgKeys.map(function(k){return '<option>'+k+'</option>'}).join('');
-  el('bSellLogic').innerHTML=lgKeys.map(function(k){return '<option>'+k+'</option>'}).join('');
+  el('bBuyLogic').innerHTML='<option>L1</option><option>L2</option>';
+  el('bSellLogic').innerHTML='<option>L1</option><option>L2</option>';
   var p=st.plans[selPlan];
   el('bBuyP').value=''; el('bSellP').value='';
   if(price){ el('bBuyP').placeholder='输入成交价（实时 '+price.toFixed(2)+'）'; el('bSellP').placeholder='输入成交价（实时 '+price.toFixed(2)+'）'; }
@@ -904,7 +942,8 @@ function renderBuild(){
   var stLine='';
   if(cur>=0){
     var r=rows[cur], pct=((p.config.high-price)/p.config.high*100).toFixed(1);
-    stLine='<div class="it">当前档位 <b>'+cur+'档(-'+DRAWDOWN[cur]+')</b></div><div class="it">L1 建议 <b>'+(r.g1!=null?fmtG(r.g1):'--')+'g</b></div><div class="it">L2 建议 <b>'+(r.g2!=null?fmtG(r.g2):'--')+'g</b></div><div class="it">L1 累计 <b>'+fmtG(r.c1)+'g</b></div><div class="it">回撤 <b>'+pct+'%</b></div>';
+    var lk=p.config.logic||'L1', lr=r[lk]||{g:0,c:0};
+    stLine='<div class="it">当前档位 <b>'+cur+'档(-'+DRAWDOWN[cur]+')</b></div><div class="it">'+logicName(lk)+'('+lk+') 建议 <b>'+(lr.g?fmtG(lr.g):'--')+'g</b></div><div class="it">累计目标 <b>'+(lr.c?fmtG(lr.c):'--')+'g</b></div><div class="it">回撤 <b>'+pct+'%</b></div>';
   } else { stLine='<div class="it">价格位于高点上方，等待回撤触发</div>'; }
   el('bStatus').innerHTML=stLine;
   // 建议卡
@@ -1111,13 +1150,19 @@ function renderSettings(){
   var html='';
   Object.keys(st.plans).forEach(function(n){
     var p=st.plans[n];
-    html+='<div class="plan-row"><span class="nm">'+n+'</span><span class="pm">高点<input class="pm-hi" type="number" step="0.01" value="'+p.config.high.toFixed(2)+'">上限<input class="pm-cap" type="number" step="1" value="'+p.config.cap+'">g</span><span class="ops"><button class="pbtn ok" data-act="save" data-name="'+n+'">保存</button><button class="pbtn" data-act="rename" data-name="'+n+'">重命名</button><button class="pbtn del" data-act="del" data-name="'+n+'">删除</button></span></div>';
+    var lgOpts=logicKeys().map(function(k){return '<option'+(p.config.logic===k?' selected':'')+'>'+k+'</option>'}).join('');
+    html+='<div class="plan-row"><span class="nm">'+n+'</span><span class="pm">高点<input class="pm-hi" type="number" step="0.01" value="'+p.config.high.toFixed(2)+'">上限<input class="pm-cap" type="number" step="1" value="'+p.config.cap+'">g 计划逻辑<select class="pm-lg" data-lg-plan="'+n+'">'+lgOpts+'</select></span><span class="ops"><button class="pbtn ok" data-act="save" data-name="'+n+'">保存</button><button class="pbtn" data-act="rename" data-name="'+n+'">重命名</button><button class="pbtn del" data-act="del" data-name="'+n+'">删除</button></span></div>';
   });
   el('sPlans').innerHTML=html;
   // 建仓逻辑管理
   var L=getLogics(), lh='';
   Object.keys(L).forEach(function(k){
-    lh+='<div class="logic-row"><div class="logic-hd"><b>'+L[k].name+'</b><span class="lg-key">'+k+'</span><span style="flex:1"></span>'+(k!=='L1'&&k!=='L2'?'<button class="pbtn del" data-lg-del="'+k+'">删除</button>':'<span style="font-size:8px;color:var(--ink3)">内置</span>')+'</div><div class="logic-grid">';
+    var m=L[k].meta||null;
+    lh+='<div class="logic-row"><div class="logic-hd"><b>'+L[k].name+'</b><span class="lg-key">'+k+'</span><span style="flex:1"></span>'+(m?'<span class="lg-sum">'+logicMetaSummary(m)+'</span><button class="pbtn ok" data-lg-gen="'+k+'">按参数生成</button>':'')+(k!=='L1'&&k!=='L2'?'<button class="pbtn del" data-lg-del="'+k+'">删除</button>':'<span style="font-size:8px;color:var(--ink3)">内置</span>')+'</div>';
+    if(m){
+      lh+='<div class="logic-meta"><label>间隔<input data-lg-m="'+k+'" data-f="gap" type="number" step="1" value="'+m.gap+'"></label><label>起点<input data-lg-m="'+k+'" data-f="start" type="number" step="1" value="'+m.start+'"></label><label>基数<input data-lg-m="'+k+'" data-f="base" type="number" step="0.0001" value="'+m.base+'"></label><label>递增<input data-lg-m="'+k+'" data-f="rate" type="number" step="0.1" value="'+m.rate+'"></label><label>回升减仓<input data-lg-m="'+k+'" data-f="reduce" type="number" step="1" value="'+m.reduce+'"></label></div>';
+    }
+    lh+='<div class="logic-grid">';
     DRAWDOWN.forEach(function(d,i){
       lh+='<div class="lg-cell"><span>'+(i===0?'0点':'-'+d)+'</span><input data-lg="'+k+'" data-i="'+i+'" type="number" step="0.0001" min="0" value="'+(L[k].base[i]||0)+'"></div>';
     });
@@ -1229,6 +1274,7 @@ function bindEvents(){
       if(!hi||hi<=0){ toast('高点价无效',true); return; }
       if(!cap||cap<=0){ toast('上限无效',true); return; }
       p.config.high=Math.round(hi*100)/100; p.config.cap=Math.round(cap*10000)/10000;
+      var lgSel=row.querySelector('.pm-lg'); if(lgSel) p.config.logic=lgSel.value;
       saveState(curUser,st); renderAll(); renderSettings(); toast(name+' 参数已保存');
     }
     if(act==='rename'){
@@ -1259,6 +1305,15 @@ function bindEvents(){
     state().settings.profitStep=v; saveState(curUser,state()); toast('盈利步长已设为 '+v+' 元/克');
   };
   // 建仓逻辑管理
+  function applyLogicMeta(k){
+    var L=getLogics(), m={};
+    document.querySelectorAll('#sLogics input[data-lg-m="'+k+'"]').forEach(function(inp){
+      m[inp.getAttribute('data-f')]=parseFloat(inp.value)||0;
+    });
+    if(!(m.gap>0&&m.start>0&&m.base>0&&m.rate>0)){ toast('参数无效：间隔/起点/基数/递增需大于0',true); return; }
+    var g=genLogicMeta(m.gap,m.start,m.base,m.rate,m.reduce||0);
+    L[k].base=g.base; L[k].meta=g.meta;
+  }
   el('sSaveLogics').onclick=function(){
     var st=state(), L=getLogics();
     document.querySelectorAll('#sLogics input[data-lg]').forEach(function(inp){
@@ -1271,14 +1326,25 @@ function bindEvents(){
     var nm=prompt('新逻辑名称（如：逻辑3）'); if(!nm) return;
     var st=state(), L=getLogics(), key='L3', i;
     for(i=1;i<=20;i++){ if(!L['L'+i]){ key='L'+i; break; } }
-    L[key]={name:nm,base:[0,0,0,0,0,0,0,0,0,0,0,0,0]};
-    st.settings.logics=L; saveState(curUser,st); renderSettings(); toast('已新建 '+nm+'（'+key+'），请填写每档加仓克重后保存');
+    var g=genLogicMeta(10,30,5,1.5,20);
+    L[key]={name:nm,meta:g.meta,base:g.base};
+    st.settings.logics=L; saveState(curUser,st); renderSettings(); toast('已新建 '+nm+'（'+key+'）：间隔10元·起点-30·基数5g·递增1.5倍，可改参数后点「按参数生成」');
   };
   document.getElementById('sLogics').addEventListener('click',function(e){
     var b=e.target.closest('[data-lg-del]'); if(!b) return;
-    var k=b.getAttribute('data-lg');
-    if(!confirm('删除逻辑 '+k+'？既有持仓数据保留')) return;
-    var st=state(); delete st.settings.logics[k]; saveState(curUser,st); renderSettings(); toast('已删除逻辑 '+k);
+    var k=b.getAttribute('data-lg-del');
+    confirmBox('删除逻辑 '+k+'？', '删除后不再出现在计划表与档位提醒中（仓位数据不受影响）', function(){
+      var st=state(); delete st.settings.logics[k];
+      Object.keys(st.plans).forEach(function(n){ if(st.plans[n].config.logic===k) st.plans[n].config.logic='L1'; });
+      saveState(curUser,st); renderSettings(); renderAll(); toast('已删除逻辑 '+k);
+      closeConfirm();
+    });
+  });
+  document.getElementById('sLogics').addEventListener('click',function(e){
+    var b=e.target.closest('[data-lg-gen]'); if(!b) return;
+    var k=b.getAttribute('data-lg-gen');
+    applyLogicMeta(k);
+    saveState(curUser,state()); renderSettings(); toast('已按参数重新生成 '+k+' 各档克重');
   });
   el('sBackup').onclick=function(){
     var blob=new Blob([JSON.stringify(state(),null,2)],{type:'application/json'});
