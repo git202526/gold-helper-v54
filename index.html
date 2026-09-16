@@ -230,6 +230,12 @@ html[data-theme="light"] .modal-btn.ok{color:#fff}
 .mini-sel{background:var(--card2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:3px 8px;font-size:13px;max-width:150px;margin-left:6px;cursor:pointer;}
 .mini-sel option{background:var(--bg);color:var(--ink);}
 
+.tp-arrived{border-color:var(--up)!important;animation:tpPulse 1.5s ease-in-out infinite;}
+.tp-arrived .v{animation:tpZoom 1.5s ease-in-out infinite;}
+.tp-tag{display:inline-block;margin-left:6px;font-size:10px;line-height:16px;padding:0 7px;border-radius:8px;color:#1a1206;background:var(--up);vertical-align:2px;font-weight:700;animation:tpTag 1.5s ease-in-out infinite;}
+@keyframes tpPulse{0%,100%{box-shadow:0 0 8px rgba(255,193,7,.30);}50%{box-shadow:0 0 26px rgba(255,193,7,.65);}}
+@keyframes tpZoom{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+@keyframes tpTag{0%,100%{opacity:1;}50%{opacity:.55;}}
 /* ===== 手机 ===== */
 @media(max-width:720px){
 #app{padding:10px 10px 86px}
@@ -270,7 +276,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo">金</div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.19 · 止盈按持仓动态推荐</div>
+    <div class="vs" id="verLogin">V5.20 · 止盈到达呼吸灯提醒</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" value="admin" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -285,7 +291,7 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo">金</div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.19 · 止盈按持仓动态推荐</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.20 · 止盈到达呼吸灯提醒</span></div>
     <div class="tb-sp"></div>
     <div class="tb-user"><span id="tbName"></span><div class="av" id="tbAv">A</div></div>
     <button class="icon-btn" id="btnTheme" title="日夜切换">🌗</button>
@@ -422,7 +428,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.19 · 止盈按持仓动态推荐</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.20 · 止盈到达呼吸灯提醒</span></div>
       </div></div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -450,8 +456,8 @@ td,th{font-size:10px;padding:6px 4px}
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.19';
-var APP_VER_NOTE='止盈按持仓动态推荐';
+var APP_VER='V5.20';
+var APP_VER_NOTE='止盈到达呼吸灯提醒';
 var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150];      // 0~15 档（16档）
 var BASE1=[0,0,0,0,0,5,7,9,12,16,22,30,42,61,96,0];           // 逻辑1：5档起，14档满仓
 var BASE2=[0,0,0,0,0,0,12,0,24,0,48,0,96,0,120,0];            // 逻辑2：-60/-80/-100/-120/-140
@@ -1094,7 +1100,13 @@ function renderTakeProfit(p,planName){
   TP.forEach(function(r,i){
     var g=Math.round(base*r*10000)/10000;
     var done=p.tpDone[i]?true:false;
-    html+='<div class="tp'+(done?' tpdone':'')+'"><div class="k">'+TP_LABEL[i]+'</div><div class="v">'+(i===4?'':fmtG(g)+'g')+'</div><div class="s">'+TP_DESC[i]+'</div>';
+    // 到达判定：1-4批价格跌破目标档（下跌止盈）；第5批涨到高点+20 或跌回0档（高点附近）清仓
+    var arrived=false;
+    if(price>0){
+      if(i<4){ arrived=price<=targets[i]+0.001; }
+      else { arrived=price>=targets[i]-0.001||price<=p.config.high+0.001; }
+    }
+    html+='<div class="tp'+(done?' tpdone':(arrived?' tp-arrived':''))+'"><div class="k">'+TP_LABEL[i]+(arrived&&!done?'<span class="tp-tag">已到达</span>':'')+'</div><div class="v">'+(i===4?'':fmtG(g)+'g')+'</div><div class="s">'+TP_DESC[i]+'</div>';
     html+='<div class="ex"><button class="go'+(i===4?' out':'')+'" id="tpGo'+i+'">'+(done?'取消执行':'标记已执行')+'</button></div>';
     if(done){ html+='<div class="res done">✔ 已执行</div>'; }
     html+='</div>';
