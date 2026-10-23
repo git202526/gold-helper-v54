@@ -338,6 +338,29 @@ tr.cur td{background:rgba(232,179,75,.09)}
 .onekey .big{font-size:20px}
 }
 
+/* ===== V5.28 打磨 ===== */
+.mini-btn{font-size:10px;font-weight:700;color:var(--gold);background:rgba(232,179,75,.1);border:1px solid rgba(232,179,75,.35);border-radius:99px;padding:4px 12px;transition:all .15s}
+.mini-btn:hover:not(:disabled){background:rgba(232,179,75,.2);box-shadow:0 4px 12px -4px rgba(232,179,75,.5)}
+.mini-btn:disabled{cursor:default}
+.tr-filter{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.tr-filter select{background:var(--bg2);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-size:11px;padding:5px 9px;outline:none}
+.tr-filter select:focus{border-color:var(--gold)}
+.tr-filter .r{margin-left:auto;font-size:10px;color:var(--ink3)}
+.empty-tip{text-align:center;color:var(--ink3);padding:28px 0;font-size:11.5px;line-height:1.8}
+.empty-tip::before{content:'◈';display:block;font-size:18px;color:var(--gold);opacity:.5;margin-bottom:6px}
+/* 终端风微网格背景（深色） */
+html[data-theme="dark"] body{background:
+  radial-gradient(900px 400px at 80% -10%,rgba(232,179,75,.07),transparent 60%),
+  repeating-linear-gradient(0deg,transparent 0 23px,rgba(232,179,75,.025) 23px 24px),
+  repeating-linear-gradient(90deg,transparent 0 23px,rgba(232,179,75,.025) 23px 24px),
+  var(--bg)}
+/* 数字更挺拔 */
+.q .v,.hc .v,.hc .big,.onekey .big,.adv .big{font-feature-settings:"tnum" 1,"lnum" 1;letter-spacing:-.5px}
+/* 手机端保持紧凑 */
+@media(max-width:720px){
+.tr-filter{gap:6px}
+.tr-filter select{font-size:10.5px;padding:4px 7px}
+}
 /* ===== 手机 ===== */
 @media(max-width:720px){
 #app{padding:10px 10px 86px}
@@ -379,7 +402,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo"><svg viewBox="0 0 38 38" width="38" height="38" aria-hidden="true"><defs><linearGradient id="lgG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6D978"/><stop offset=".55" stop-color="#E8B34B"/><stop offset="1" stop-color="#9A6A12"/></linearGradient></defs><rect x="1" y="1" width="36" height="36" rx="11" fill="url(#lgG2)"/><circle cx="19" cy="19" r="12.5" fill="none" stroke="rgba(23,16,7,.30)" stroke-width="1.4"/><text x="19" y="24.5" text-anchor="middle" font-size="16" font-weight="900" fill="#1a1206" font-family="'PingFang SC','Microsoft YaHei',sans-serif">金</text></svg></div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.27</div>
+    <div class="vs" id="verLogin">V5.28</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -394,7 +417,7 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 38 38" width="38" height="38" aria-hidden="true"><defs><linearGradient id="lgG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6D978"/><stop offset=".55" stop-color="#E8B34B"/><stop offset="1" stop-color="#9A6A12"/></linearGradient></defs><rect x="1" y="1" width="36" height="36" rx="11" fill="url(#lgG1)"/><circle cx="19" cy="19" r="12.5" fill="none" stroke="rgba(23,16,7,.30)" stroke-width="1.4"/><text x="19" y="24.5" text-anchor="middle" font-size="16" font-weight="900" fill="#1a1206" font-family="'PingFang SC','Microsoft YaHei',sans-serif">金</text></svg></div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.27</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.28</span></div>
     <div class="tb-sp"></div>
     <button class="icon-btn" id="btnLogout" title="退出">⏻</button>
   </div>
@@ -469,7 +492,7 @@ td,th{font-size:10px;padding:6px 4px}
   <!-- 仓位 -->
   <div id="view-position" class="hide">
     <div class="panel"><h3>仓位列表 <span class="r">分方案 × 逻辑 · 买卖直接加减</span></h3><div class="tbl-scroll"><table id="pTable"></table></div></div>
-    <div class="panel"><h3>买卖记录 <span class="r">全量流水</span></h3><div class="tbl-scroll"><table id="pTrades"></table></div></div>
+    <div class="panel"><h3>买卖记录 <span class="r">全量流水</span></h3><div class="tr-filter"><select id="trPlan"><option value="">全部方案</option></select><select id="trDir"><option value="">全部方向</option><option value="买入">买入</option><option value="卖出">卖出</option></select><span class="r" id="trCount"></span></div><div class="tbl-scroll"><table id="pTrades"></table></div></div>
   </div>
 
   <!-- 计划 -->
@@ -528,8 +551,9 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>日夜主题</b><span class="sw on" id="sTheme"></span></div>
         <div class="set-row"><b>字体大小</b><span class="r" style="display:flex;align-items:center;gap:6px"><button class="pbtn" id="sFontMinus" style="width:26px;height:26px">A−</button><input id="sFont" type="range" min="80" max="120" step="5" style="width:90px;accent-color:#E8B34B"><button class="pbtn" id="sFontPlus" style="width:26px;height:26px">A+</button></span></div>
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
+        <div class="set-row"><b>提醒提示音</b><span class="r" style="font-size:9px;color:var(--ink3)">到价时叮两声</span><span class="sw on" id="sSound"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.27 · 电脑版视觉升级</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.28 · 全量打磨</span></div>
       </div></div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -557,8 +581,8 @@ td,th{font-size:10px;padding:6px 4px}
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.27';
-var APP_VER_NOTE='电脑版视觉升级';
+var APP_VER='V5.28';
+var APP_VER_NOTE='全量打磨：止盈空态/流水筛选/提示音/终端风';
 var DRAWDOWN=[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150];      // 0~15 档（16档）
 var BASE1=[0,0,0,0,0,5,7,9,12,16,22,30,42,61,96,0];           // 逻辑1：5档起，14档满仓
 var BASE2=[0,0,0,0,0,0,12,0,24,0,48,0,96,0,120,0];            // 逻辑2：-60/-80/-100/-120/-140
@@ -910,8 +934,25 @@ el('priceMask').addEventListener('click',function(e){ if(e.target===this){ close
 function el(id){ return document.getElementById(id); }
 var curUser=null,curState=null,curTab='overview';
 function state(){ return curState; }
-/* ================= 价格提醒（横幅 + 浏览器通知 + 标题闪烁） ================= */
+/* ================= 价格提醒（横幅 + 浏览器通知 + 标题闪烁 + 提示音） ================= */
 var lastRemindState='';
+function beep(){
+  try{
+    var Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx) return;
+    var ctx=window._actx||(window._actx=new Ctx());
+    if(ctx.state==='suspended'){ ctx.resume(); }
+    [0,0.25].forEach(function(del){
+      var o=ctx.createOscillator(), g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type='sine'; o.frequency.value=del?1174:880;
+      var t=ctx.currentTime+del;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.18,t+0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.5);
+      o.start(t); o.stop(t+0.55);
+    });
+  }catch(e){}
+}
 function checkRemind(){
   var st=state(); if(!st) return;
   var price=priceNow(); if(!price) return;
@@ -929,6 +970,7 @@ function checkRemind(){
     el('remindBarTxt').textContent=msgs.join(' · ');
     if(key!==lastRemindState){
       if(typeof Notification!=='undefined'&&Notification.permission==='granted'){ try{ new Notification('黄金价格提醒',{body:msgs.join(' · ')}); }catch(e){} }
+      if(st.settings.soundOn!==false) beep();
       toast(msgs.join(' · '));
       document.title='⚠ '+msgs.join(' · ');
       clearTimeout(checkRemind._t);
@@ -1144,10 +1186,20 @@ function renderPosition(){
   });
   if(!has){ rows+='<tr><td colspan="10" style="text-align:center;color:var(--ink3);padding:22px">暂无持仓 · 去「建仓」执行买入</td></tr>'; }
   el('pTable').innerHTML=rows;
-  // 流水
+  // 流水（带筛选）
+  var trPlanSel=el('trPlan'), trDirSel=el('trDir');
+  var curPlanSel=trPlanSel.value, curDirSel=trDirSel.value;
+  trPlanSel.innerHTML='<option value="">全部方案</option>'+Object.keys(st.plans).map(function(n){ return '<option value="'+n+'"'+(n===curPlanSel?' selected':'')+'>'+n+'</option>'; }).join('');
+  trDirSel.value=curDirSel;
   var tr='<tr><th>时间</th><th>方案</th><th>类型</th><th>成交价</th><th>克重</th><th>金额</th><th>单笔已实现</th></tr>';
-  if(!st.trades.length){ tr+='<tr><td colspan="7" style="text-align:center;color:var(--ink3);padding:20px">暂无买卖记录</td></tr>'; }
-  st.trades.slice(0,30).forEach(function(t){
+  var filtered=st.trades.filter(function(t){
+    if(curPlanSel && t.plan!==curPlanSel) return false;
+    if(curDirSel && t.type!==curDirSel) return false;
+    return true;
+  });
+  el('trCount').textContent=filtered.length+' 笔';
+  if(!filtered.length){ tr+='<tr><td colspan="7" style="text-align:center;color:var(--ink3);padding:20px">暂无匹配记录</td></tr>'; }
+  filtered.slice(0,50).forEach(function(t){
     tr+='<tr><td><b>'+t.time+'</b></td><td>'+t.plan+'</td><td style="color:'+(t.type==='买入'?'var(--down)':'var(--up)')+'">'+t.type+'</td><td>'+t.price.toFixed(2)+'</td><td>'+fmtG(t.grams)+'g</td><td>'+fmt(t.amount,0)+'</td><td>'+(t.realized===null?'--':'<span class="'+(t.realized>=0?'up':'dn')+'">'+fmt(t.realized,1)+'</span>')+'</td></tr>';
   });
   el('pTrades').innerHTML=tr;
@@ -1183,10 +1235,20 @@ function renderPlan(){
 }
 function renderTakeProfit(p,planName){
   var box=el('plTakeProfit'), html='', grams=posAgg(p).grams, avg=posAgg(p).avg, price=priceNow();
+  // 空仓态：不锁定空方案，显示友好提示，刷新按钮禁用
+  var rf=el('plTpRefresh');
+  if(grams<=0.0001){
+    if(rf){ rf.disabled=true; rf.style.opacity=.4; }
+    el('plTpInfo').textContent='';
+    if(el('plTpBar')) el('plTpBar').innerHTML='';
+    box.innerHTML='<div class="empty-tip">暂无持仓 · 建仓买入后自动生成分批止盈方案</div>';
+    return;
+  }
+  if(rf){ rf.disabled=false; rf.style.opacity=1; }
   // 止盈方案：手动控制。首次自动按当前持仓锁定批次克重；之后卖出不自动刷新（避免卖不完），
   // 需点「刷新方案」才按最新持仓重新生成（适配接下来的推荐）
   if(!p.tpPlan || !(p.tpPlan.base>0.0001)){
-    p.tpPlan={base:Math.round((grams>0.0001?grams:0)*10000)/10000, gs:TP.map(function(r){ return Math.round(Math.max(grams,0)*r*10000)/10000; })};
+    p.tpPlan={base:Math.round(grams*10000)/10000, gs:TP.map(function(r){ return Math.round(Math.max(grams,0)*r*10000)/10000; })};
   }
   var base=p.tpPlan.base, gs=p.tpPlan.gs;
   el('plTpInfo').textContent='方案基准 '+fmtG(base)+'g'+(p.tpPlan.t?' · '+p.tpPlan.t:'');
@@ -1329,6 +1391,7 @@ function renderSettings(){
   });
   el('sLogics').innerHTML=lh;
   el('sRemind').classList.toggle('on',!!st.settings.remindOn);
+  el('sSound').classList.toggle('on',st.settings.soundOn!==false);
   el('sStep').value=st.settings.profitStep||40;
   el('sSync').classList.toggle('on',st.settings.syncOn!==false);
   el('sToken').value=st.settings.gitToken||'';
@@ -1473,11 +1536,17 @@ function bindEvents(){
       Notification.requestPermission();
     }
   };
+  el('sSound').onclick=function(){
+    state().settings.soundOn=!state().settings.soundOn;
+    el('sSound').classList.toggle('on',state().settings.soundOn);
+    saveState(curUser,state());
+    toast('提示音已'+(state().settings.soundOn?'开启':'关闭'));
+    if(state().settings.soundOn) beep();
+  };
   el('sStep').onchange=function(){
     var v=parseFloat(el('sStep').value);
     if(!v||v<=0){ v=40; el('sStep').value=40; }
-    state().settings.profitStep=v; saveState(curUser,state()); toast('盈利步长已设为 '+v+' 元/克');
-  };
+    state().settings.profitStep=v; saveState(curUser,state()); toast('盈利步长已设为 '+v+' 元/克');  };
   // 建仓逻辑管理
   function applyLogicMeta(k){
     var L=getLogics(), m={};
@@ -1551,6 +1620,9 @@ function bindEvents(){
   };
   el('sSyncGo').onclick=function(){ syncNow(true); };
   el('sExcel').onclick=exportExcel;
+  // 买卖记录筛选
+  el('trPlan').onchange=renderAll;
+  el('trDir').onchange=renderAll;
   // 迁移旧版数据（读取旧应用云端 admin.json → 转换合并）
   el('sMigrate').onclick=async function(){
     if(!syncToken()){ toast('请先配置同步令牌',true); return; }
