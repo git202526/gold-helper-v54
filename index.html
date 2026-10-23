@@ -247,8 +247,9 @@ html[data-theme="light"] .modal-btn.ok{color:#fff}
 :root{--gold-grad:linear-gradient(135deg,#F7D977,#E8B34B 55%,#B8860B);--card-hover:0 16px 44px -14px rgba(0,0,0,.55)}
 html[data-theme="light"]{--card-hover:0 16px 40px -16px rgba(30,40,70,.32)}
 /* 顶部柔和品牌光带 */
-#app{position:relative}
+#app{position:relative;overflow:hidden}
 #app::before{content:'';position:absolute;top:-90px;left:50%;transform:translateX(-50%);width:900px;height:240px;background:radial-gradient(closest-side,rgba(232,179,75,.16),transparent 70%);pointer-events:none;z-index:0}
+@media(max-width:720px){ #app::before{display:none} }
 /* 顶栏 */
 .topbar{position:relative;z-index:1}
 .ttl{font-size:17px;letter-spacing:.6px}
