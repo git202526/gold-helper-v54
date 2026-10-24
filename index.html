@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{--bg:#0B0E14;--bg2:#0F1420;--card:#141A29;--card2:#1A2235;--line:#243049;--ink:#EDF1F8;--ink2:#9AA7BD;--ink3:#5E6B82;--gold:#E8B34B;--gold2:#B8860B;--up:#F2555A;--down:#34D399;--violet:#8B7CF6;--font:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;--shadow:0 18px 50px -18px rgba(0,0,0,.7)}
-html[data-theme="light"]{--bg:#EEF1F6;--bg2:#E4E8F0;--card:#FFFFFF;--card2:#F4F6FB;--line:#D8DEEA;--ink:#1A2233;--ink2:#45536B;--ink3:#8593AC;--gold:#B8860B;--gold2:#8A6508;--up:#E0343B;--down:#0FA873;--violet:#6A5AE0;--shadow:0 14px 34px -16px rgba(30,40,70,.25)}
+html[data-theme="light"]{--bg:#EEF1F6;--bg2:#E4E8F0;--card:#FFFFFF;--card2:#F4F6FB;--line:#D8DEEA;--ink:#1A2233;--ink2:#45536B;--ink3:#6E7B96;--gold:#8A6508;--gold2:#6B4D06;--up:#C9383F;--down:#0B8F62;--violet:#6A5AE0;--shadow:0 14px 34px -16px rgba(30,40,70,.25)} /* D2：日间金色/涨跌色加深，白卡对比度≥4.5:1 */
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased;font-size:14px}
 button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
@@ -63,7 +63,7 @@ th{font-size:9px;color:var(--ink3);font-weight:600;text-align:right;padding:6px 
 th:first-child,td:first-child{text-align:left}
 td{font-size:11px;padding:7px;text-align:right;border-bottom:1px solid rgba(36,48,73,.35);color:var(--ink2);white-space:nowrap}
 td b{color:var(--ink)}
-tr.cur td{background:rgba(232,179,75,.07)}
+tr.cur td{background:rgba(232,179,75,.07);box-shadow:inset 0 0 0 1px rgba(232,179,75,.4);border-left:2px solid var(--gold)}
 tr.cur td b{color:var(--gold)}
 .up{color:var(--up)}.dn{color:var(--down)}
 .hero{display:grid;grid-template-columns:1.25fr 1fr 1fr 1.1fr .9fr;gap:10px;margin-bottom:12px}
@@ -319,7 +319,7 @@ th{font-size:9.5px;letter-spacing:.5px}
 td{font-size:11.5px}
 table tbody tr{transition:background .15s}
 table tbody tr:hover{background:rgba(232,179,75,.045)}
-tr.cur td{background:rgba(232,179,75,.09)}
+tr.cur td{background:rgba(232,179,75,.09);box-shadow:inset 0 0 0 1px rgba(232,179,75,.45);border-left:2px solid var(--gold)}
 /* 止盈/汇总卡 */
 .tp{transition:transform .15s,box-shadow .15s}
 .tp:hover{transform:translateY(-2px);box-shadow:var(--card-hover)}
@@ -406,7 +406,7 @@ td,th{font-size:10px;padding:6px 4px}
   <div class="lg-box">
     <div class="lg-logo"><svg viewBox="0 0 38 38" width="38" height="38" aria-hidden="true"><defs><linearGradient id="lgG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6D978"/><stop offset=".55" stop-color="#E8B34B"/><stop offset="1" stop-color="#9A6A12"/></linearGradient></defs><rect x="1" y="1" width="36" height="36" rx="11" fill="url(#lgG2)"/><circle cx="19" cy="19" r="12.5" fill="none" stroke="rgba(23,16,7,.30)" stroke-width="1.4"/><text x="19" y="24.5" text-anchor="middle" font-size="16" font-weight="900" fill="#1a1206" font-family="'PingFang SC','Microsoft YaHei',sans-serif">金</text></svg></div>
     <h1>黄金智能助手</h1>
-    <div class="vs" id="verLogin">V5.28</div>
+    <div class="vs" id="verLogin">V5.29</div>
     <div class="lg-f">
       <input id="lgUser" placeholder="账号" autocomplete="username">
       <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
@@ -421,7 +421,7 @@ td,th{font-size:10px;padding:6px 4px}
 <div id="app" class="hide">
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 38 38" width="38" height="38" aria-hidden="true"><defs><linearGradient id="lgG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6D978"/><stop offset=".55" stop-color="#E8B34B"/><stop offset="1" stop-color="#9A6A12"/></linearGradient></defs><rect x="1" y="1" width="36" height="36" rx="11" fill="url(#lgG1)"/><circle cx="19" cy="19" r="12.5" fill="none" stroke="rgba(23,16,7,.30)" stroke-width="1.4"/><text x="19" y="24.5" text-anchor="middle" font-size="16" font-weight="900" fill="#1a1206" font-family="'PingFang SC','Microsoft YaHei',sans-serif">金</text></svg></div>
-    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.28</span></div>
+    <div class="ttl">黄金智能助手<span class="vs" id="verTop">V5.29</span></div>
     <div class="tb-sp"></div>
     <button class="icon-btn" id="btnLogout" title="退出">⏻</button>
   </div>
@@ -557,7 +557,7 @@ td,th{font-size:10px;padding:6px 4px}
         <div class="set-row"><b>价格提醒</b><span class="r" style="font-size:9px;color:var(--ink3)">保本 / 每克盈利</span><span class="sw on" id="sRemind"></span></div>
         <div class="set-row"><b>提醒提示音</b><span class="r" style="font-size:9px;color:var(--ink3)">到价时叮两声</span><span class="sw on" id="sSound"></span></div>
         <div class="set-row"><b>每克盈利步长</b><input id="sStep" type="number" value="40" min="1" step="1" style="width:64px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px;font-weight:700;padding:6px 8px;text-align:center"><span class="r">元/克</span></div>
-        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.28 · 全量打磨</span></div>
+        <div class="set-row"><b>版本</b><span class="r" id="verSet">V5.29 · 收口：止盈0档清仓/分析五卡/数据兜底/克重4位</span></div>
       </div></div>
     </div>
     <input type="file" id="sRestoreFile" accept=".json" class="hide">
@@ -585,8 +585,8 @@ td,th{font-size:10px;padding:6px 4px}
 <script>
 'use strict';
 /* ================= 规则内核（勿改） ================= */
-var APP_VER='V5.28';
-var APP_VER_NOTE='全量打磨：止盈空态/流水筛选/提示音/终端风';
+var APP_VER='V5.29';
+var APP_VER_NOTE='收口：止盈0档清仓口径/分析五卡/数据兜底/克重4位复核';
 /* 自动更新：WebView 缓存旧版时拉最新版对比版本号，不一致就强制刷新 */
 (function(){
   try{
@@ -712,7 +712,14 @@ function loadState(user){
   var raw=localStorage.getItem('jcj_v54_'+user);
   firstRun=!raw;
   var st;
-  try{ st=raw?JSON.parse(raw):blankState(); }catch(e){ st=blankState(); }
+  // 损坏/非法 JSON：保留原串备份，标记损坏提示，绝不覆盖用户数据
+  window.__corruptRaw=null;
+  try{ st=raw?JSON.parse(raw):blankState(); }
+  catch(e){
+    window.__corruptRaw=raw;
+    st=blankState();
+    if(raw){ window.__corruptFlag=true; }
+  }
   if(!st.plans){ st.plans={}; }
   if(!Object.keys(st.plans).length){ st.plans['默认']=blankPlan('默认'); }
   ensureLogics(st);
@@ -724,10 +731,19 @@ function loadState(user){
       var c=Math.round((p.position.l1.cost+p.position.l2.cost)*100)/100;
       p.position={grams:g,avg:g>0?Math.round(c/g*100)/100:0,cost:c};
     }
-    if(!p.position || p.position.grams===undefined){ p.position=blankPos(); }
+    if(!p.position || typeof p.position.grams!=='number'||!isFinite(p.position.grams)||p.position.grams<0){ p.position=blankPos(); }
+    if(typeof p.position.avg!=='number'||!isFinite(p.position.avg)){ p.position.avg=0; }
+    if(typeof p.position.cost!=='number'||!isFinite(p.position.cost)){ p.position.cost=0; }
     if(!p.realized){ p.realized={soldGrams:0,soldCount:0,soldAvg:0,soldAmount:0,soldCost:0,profit:0,loss:0,net:0}; }
-    if(p.realized.soldCost===undefined){ p.realized.soldCost=0; }
-    if(!p.config){ p.config={name:n,high:991.95,cap:150,openDate:null}; }
+    ['soldGrams','soldCount','soldAvg','soldAmount','soldCost','profit','loss','net'].forEach(function(k){
+      if(typeof p.realized[k]!=='number'||!isFinite(p.realized[k])){ p.realized[k]=0; }
+    });
+    if(!p.config){ p.config={name:n,high:991.95,cap:150,openDate:null,logic:'L1'}; }
+    if(typeof p.config.high!=='number'||!isFinite(p.config.high)||p.config.high<=0){ p.config.high=991.95; }
+    if(typeof p.config.cap!=='number'||!isFinite(p.config.cap)||p.config.cap<=0){ p.config.cap=150; }
+    if(!p.config.logic){ p.config.logic='L1'; }
+    if(!p.tpPlan){ p.tpPlan=null; }
+    if(!p.tpDone){ p.tpDone={}; }
   });
   // 迁移：建仓逻辑 base 13档 → 16档（原 0~12 档保留，-130/-140/-150 补 0，可按参数重新生成）
   Object.keys(st.settings.logics||{}).forEach(function(k){
@@ -742,7 +758,18 @@ function loadState(user){
     }
   });
   if(!st.trades){ st.trades=[]; }
+  st.trades=st.trades.filter(function(t){
+    return t && typeof t==='object' && t.plan && (t.type==='买入'||t.type==='卖出') &&
+      typeof t.price==='number'&&isFinite(t.price)&&t.price>0 &&
+      typeof t.grams==='number'&&isFinite(t.grams)&&t.grams>0;
+  });
   if(!st.settings){ st.settings={profitStep:40,remindOn:true,theme:'dark',syncOn:true,gitToken:''}; }
+  if(typeof st.settings.profitStep!=='number'||!isFinite(st.settings.profitStep)||st.settings.profitStep<=0){ st.settings.profitStep=40; }
+  if(typeof st.settings.remindOn!=='boolean'){ st.settings.remindOn=true; }
+  if(st.settings.theme!=='light'){ st.settings.theme='dark'; }
+  if(typeof st.settings.soundOn!=='boolean'){ st.settings.soundOn=true; }
+  if(typeof st.settings.syncOn!=='boolean'){ st.settings.syncOn=true; }
+  if(typeof st.settings.gitToken!=='string'){ st.settings.gitToken=''; }
   if(!st._t){ st._t=Date.now(); }
   return st;
 }
@@ -814,14 +841,22 @@ async function syncNow(manual){
       if(manual) toast('同步失败：'+r.status,true);
     }
   }catch(e){
+    // B2：失败降级——本地数据不动，标记 dirty 并在 30s 后自动重试（不覆盖本地 state）
     setSyncState('离线（本地可用）','var(--ink3)');
-    if(manual) toast('同步失败：网络不可用',true);
+    if(manual) toast('同步失败：网络不可用，稍后自动重试',true);
+    syncDirty=true;
+    clearTimeout(syncNow._retry);
+    syncNow._retry=setTimeout(function(){
+      if(syncDirty&&state()&&state().settings.syncOn!==false){ syncDirty=false; syncNow(false); }
+    },30000);
   }
 }
 /* ================= 买卖引擎 ================= */
 function buy(user,st,planName,grams,price){
   var p=st.plans[planName];
   if(!p){ return {ok:false,msg:'方案不存在'}; }
+  if(!(grams>0)||typeof grams!=='number'||!isFinite(grams)){ return {ok:false,msg:'买入克重必须大于 0'}; }
+  if(!(price>0)||typeof price!=='number'||!isFinite(price)){ return {ok:false,msg:'买入成交价必须大于 0'}; }
   var pos=p.position;
   pos.grams=Math.round((pos.grams+grams)*10000)/10000;
   pos.cost=Math.round((pos.cost+grams*price)*100)/100;
@@ -834,6 +869,8 @@ function buy(user,st,planName,grams,price){
 function sell(user,st,planName,grams,price){
   var p=st.plans[planName]; if(!p){ return {ok:false,msg:'方案不存在'}; }
   var pos=p.position;
+  if(!(grams>0)||typeof grams!=='number'||!isFinite(grams)){ return {ok:false,msg:'卖出克重必须大于 0'}; }
+  if(!(price>0)||typeof price!=='number'||!isFinite(price)){ return {ok:false,msg:'卖出成交价必须大于 0'}; }
   if(grams>pos.grams+0.0001){ return {ok:false,msg:'卖出量超过 '+planName+' 持仓 '+pos.grams+'g'}; }
   var realized=Math.round((price-pos.avg)*grams*100)/100;
   var r=p.realized;
@@ -886,7 +923,7 @@ function aggregate(st,price){
   return a;
 }
 /* ================= 行情（三源独立） ================= */
-var FX={cny:null,usd:null,fx:null,time:null,t0:0};
+var FX={cny:null,usd:null,fx:null,time:null,t0:0,_c:{}}; // _c: 各源最后成功价缓存（B3 行情容错）
 var API=[
   {name:'人民币金价',key:'cny',url:'https://api.gold-api.com/price/XAU/CNY',fn:function(d){ return Math.round(d.price/31.1034768*100)/100; }},
   {name:'伦敦金',key:'usd',url:'https://api.gold-api.com/price/XAU',fn:function(d){ return Math.round(d.price*100)/100; }},
@@ -898,26 +935,32 @@ function fetchPrice(api){
     fetch(api.url,{signal:c.signal}).then(function(r){return r.json()}).then(function(d){
       clearTimeout(to);
       var v=api.fn(d);
-      if(typeof v==='number'&&v>0){ FX[api.key]=v; res(true); } else res(false);
-    }).catch(function(){clearTimeout(to);res(false)});
+      if(typeof v==='number'&&v>0){ FX[api.key]=v; FX._c[api.key]=v; res(true); } else res(false);
+    }).catch(function(){
+      clearTimeout(to);
+      // B3：单源失败时回退该源上次成功价，避免界面闪 '--'
+      if(FX._c[api.key]){ FX[api.key]=FX._c[api.key]; }
+      res(false);
+    });
   });
 }
 async function refreshQuotes(){
   var st=state();
   if(!st) return;
   var ok=await Promise.all(API.map(fetchPrice));
+  var any=ok.indexOf(true)>=0;
+  FX._delay=!any; // B3：全源失败 → 行情延迟标记（先于渲染赋值）
   FX.time=new Date();
   renderQuotes();
-  var any=ok.indexOf(true)>=0;
   if(any){ FX.t0=Date.now(); scheduleNext(); }
   renderAll();
 }
-function scheduleNext(){ clearTimeout(scheduleNext._t); scheduleNext._t=setTimeout(refreshQuotes, anyFail()?5000:30000); }
+function scheduleNext(){ clearTimeout(scheduleNext._t); scheduleNext._t=setTimeout(refreshQuotes, FX._delay?5000:30000); } // B3：延迟期间 5s 快速重试
 function anyFail(){ return API.some(function(a){ return FX[a.key]===null; }); }
 /* ================= 工具 ================= */
 function nowStr(){ var d=new Date(),p=function(n){return (n<10?'0':'')+n}; return (d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes()); }
 function today(){ var d=new Date(),p=function(n){return (n<10?'0':'')+n}; return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
-function fmt(n,d){ if(n===null||n===undefined||isNaN(n)) return '--'; return (n<0?'-':'')+Math.abs(n).toLocaleString('zh-CN',{maximumFractionDigits:(d||0)}); }
+function fmt(n,d){ if(n===null||n===undefined||isNaN(n)) return '--'; return (n<0?'-':'')+Math.abs(n).toLocaleString('zh-CN',{minimumFractionDigits:(d>=2?d:0),maximumFractionDigits:(d||0)}); } // 价格2位补零，盈亏整数/1位不补
 function fmtG(n){ if(n===null||n===undefined||isNaN(n)) return '--'; return (n<0?'-':'')+Math.abs(n).toLocaleString('zh-CN',{minimumFractionDigits:4,maximumFractionDigits:4}); }
 function priceNow(){ return FX.cny||0; }
 function toast(msg,err){ var t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); clearTimeout(toast._t); toast._t=setTimeout(function(){t.className='toast';},2200); }
@@ -975,21 +1018,30 @@ function checkRemind(){
   var st=state(); if(!st) return;
   var price=priceNow(); if(!price) return;
   var remind=st.settings.remindOn!==false, step=st.settings.profitStep||PROFIT_STEP;
-  var msgs=[];
+  var msgs=[], alerts=[];
   Object.keys(st.plans).forEach(function(n){
     var pa=posAgg(st.plans[n]);
     if(pa.grams<=0||pa.avg<=0) return;
-    if(remind&&price>=pa.avg+step) msgs.push(n+' 每克盈利≥'+step+'元');
-    else if(remind&&price>=pa.avg+BREAK_EVEN) msgs.push(n+' 已回本');
+    if(remind&&price>=pa.avg+step){ msgs.push(n+' 每克盈利≥'+step+'元'); alerts.push({n:n}); }
+    else if(remind&&price>=pa.avg+BREAK_EVEN){ msgs.push(n+' 已回本'); alerts.push({n:n}); }
   });
   var key=msgs.join('|'), bar=el('remindBar');
   if(msgs.length){
     bar.classList.add('show');
     el('remindBarTxt').textContent=msgs.join(' · ');
+    // C3：同一方案 30 分钟内不重复弹通知/提示音（标题闪烁保留）
+    var now=Date.now(), fresh=[];
+    checkRemind._nt=checkRemind._nt||{};
+    alerts.forEach(function(a){
+      if(!checkRemind._nt[a.n]||now-checkRemind._nt[a.n]>=30*60*1000) fresh.push(a.n);
+    });
     if(key!==lastRemindState){
-      if(typeof Notification!=='undefined'&&Notification.permission==='granted'){ try{ new Notification('黄金价格提醒',{body:msgs.join(' · ')}); }catch(e){} }
-      if(st.settings.soundOn!==false) beep();
-      toast(msgs.join(' · '));
+      if(fresh.length){
+        fresh.forEach(function(n){ checkRemind._nt[n]=now; });
+        if(typeof Notification!=='undefined'&&Notification.permission==='granted'){ try{ new Notification('黄金价格提醒',{body:msgs.join(' · ')}); }catch(e){} }
+        if(st.settings.soundOn!==false) beep();
+        toast(msgs.join(' · '));
+      }
       document.title='⚠ '+msgs.join(' · ');
       clearTimeout(checkRemind._t);
       checkRemind._t=setTimeout(function(){ document.title='黄金智能助手 '+APP_VER; },6000);
@@ -1055,7 +1107,7 @@ function renderQuotes(){
   el('qUsd').textContent=FX.usd?FX.usd.toFixed(2):'--';
   el('qFx').textContent=FX.fx?FX.fx.toFixed(4):'--';
   el('qTime').textContent=FX.time?FX.time.toTimeString().slice(0,8):'--';
-  el('qState').textContent=anyFail()?'降级·保留旧值':'30秒自动刷新';
+  el('qState').textContent=FX._delay?'行情延迟·保留上次成功价':'30秒自动刷新';
   var st=state(); if(!st) return;
   var price=priceNow(), hits=[], steps=[];
   var remind=st.settings.remindOn!==false, step=st.settings.profitStep||PROFIT_STEP;
@@ -1244,10 +1296,18 @@ function renderPlan(){
   var html='<tr><th>档位</th><th>参考价</th><th>'+lk+'推荐</th><th>'+lk+'目标</th><th>'+lk+'均价</th></tr>';
   rows.forEach(function(r){
     var v=r[lk]||{g:0,c:0,a:0};
-    var row='<tr'+(r.tier===cur?' class="cur"':'')+'><td>'+r.tier+'档 '+(r.draw===0?'高点':'-'+r.draw)+'</td><td>'+r.price.toFixed(2)+'</td><td>'+(v.g?fmtG(v.g)+'g':'--')+'</td><td>'+(v.c?fmtG(v.c)+'g':'--')+'</td><td>'+(v.a?v.a.toFixed(2):'--')+'</td></tr>';
+    var row='<tr'+(r.tier===cur?' class="cur"':'')+' data-tier="'+r.tier+'"><td>'+r.tier+'档 '+(r.draw===0?'高点':'-'+r.draw)+'</td><td>'+r.price.toFixed(2)+'</td><td>'+(v.g?fmtG(v.g)+'g':'--')+'</td><td>'+(v.c?fmtG(v.c)+'g':'--')+'</td><td>'+(v.a?v.a.toFixed(2):'--')+'</td></tr>';
     html+=row;
   });
   el('plTable').innerHTML=html;
+  // C2：点击档位行定位高亮（不改变自动当前档逻辑，切方案重新渲染恢复）
+  el('plTable').onclick=function(e){
+    var tr=e.target&&e.target.closest?e.target.closest('tr[data-tier]'):null;
+    if(!tr) return;
+    el('plTable').querySelectorAll('tr.cur').forEach(function(x){ x.classList.remove('cur'); });
+    tr.classList.add('cur');
+    if(tr.scrollIntoView){ tr.scrollIntoView({block:'nearest'}); }
+  };
   renderSellSum(p,selPlan);
   renderTakeProfit(p,selPlan);
 }
@@ -1279,10 +1339,10 @@ function renderTakeProfit(p,planName){
     var g=Math.round(base*r*10000)/10000;
     sumPnl+=g*(targets[i]-avg);
   });
-  var clearG=grams, clearPnl=grams*(p.config.high-10-avg); // 回到1档(高点-10)清仓
+  var clearG=grams, clearPnl=grams*(p.config.high-avg); // 0档=高点，与第5批"跌回0档清仓"判定一致（PRD 4.2）
   bar.innerHTML=
     '<div class="tb"><div class="k">分批止盈目标盈利总额</div><div class="v '+(sumPnl>=0?'':'')+'">'+(grams>0?(sumPnl>=0?'+':'')+fmt(sumPnl,0):'--')+'<span style="font-size:9px;color:var(--ink3)"> 元</span></div><div class="s">5 批合计 · 按止盈目标价推算</div></div>'+
-    '<div class="tb"><div class="k">回到1档清仓目标盈利</div><div class="v '+(clearPnl>=0?'':'')+'">'+(grams>0?(clearPnl>=0?'+':'')+fmt(clearPnl,0):'--')+'<span style="font-size:9px;color:var(--ink3)"> 元</span></div><div class="s">全部持仓 '+(grams>0?fmtG(grams):'--')+'g @ 1档('+fmt(p.config.high-10,2)+')清仓</div></div>';
+    '<div class="tb"><div class="k">跌回0档清仓目标盈利</div><div class="v '+(clearPnl>=0?'':'')+'">'+(grams>0?(clearPnl>=0?'+':'')+fmt(clearPnl,0):'--')+'<span style="font-size:9px;color:var(--ink3)"> 元</span></div><div class="s">全部持仓 '+(grams>0?fmtG(grams):'--')+'g @ 0档(高点'+fmt(p.config.high,2)+')清仓</div></div>';
   TP.forEach(function(r,i){
     var g=Math.round(base*r*10000)/10000;
     var done=p.tpDone[i]?true:false;
@@ -1316,7 +1376,8 @@ function renderAnalytics(){
   var st=state(); if(!st) return;
   var price=priceNow(), a=aggregate(st,price);
   var names=Object.keys(st.plans).filter(function(n){return posAgg(st.plans[n]).grams>0.0001});
-  // 四卡：已实现 / 浮动 / 总盈亏 / 总持仓
+  // 五卡：已实现 / 浮动 / 总盈亏 / 总持仓 / 总投入（PRD 3.5）
+  // 口径：总投入 = Σ 各方案持仓成本 pos.cost（当前持仓成本，不含已卖出部分）
   var tot=a.float+a.realized;
   el('aCards').innerHTML=
     '<div class="ss"><div class="k">已实现盈亏</div><div class="v '+(a.realized>=0?'ok':'bad')+'">'+fmt(a.realized,0)+'</div></div>'+
@@ -1442,6 +1503,10 @@ function doLogin(user,pass){
 
   applyTheme(curState.settings.theme||'dark');
   if(curState.settings.fontScale){ document.body.style.zoom=curState.settings.fontScale/100; el('sFont').value=curState.settings.fontScale; }
+  if(window.__corruptFlag){
+    toast('数据文件损坏，已用空白状态启动，原数据未覆盖',true);
+    window.__corruptFlag=false;
+  }
   renderAll();
   renderSettings();
   refreshQuotes();
